@@ -1,7 +1,7 @@
 <template>
   <v-container class="p-4 mt-12" justify="center">
     <p class="text-h5 font-weight-bold">Welcome Back &#128075;</p>
-    <p class="text-caption">Sign in your account</p>
+    <p class="text-caption">Sign in to your account</p>
     <v-form @submit.prevent="submitForm">
       <v-text-field
         v-model="email"
@@ -39,10 +39,11 @@
 </template>
 
 <script>
-  import axios from 'axios';
-  import Swal from 'sweetalert2';
-  export default {
-    data: () => ({
+import api from '@/api/axios.js'; // Import instance Axios yang telah dikonfigurasi
+
+export default {
+  data() {
+    return {
       email: '',
       emailRules: [
         value => !!value || 'E-mail is required.',
@@ -50,35 +51,37 @@
       ],
       password: '',
       passwordRules: [
-        value => {
-          if (value) return true;
-          return 'Password is required.';
-        },
+        value => !!value || 'Password is required.',
       ],
       isLoading: false, // State untuk indikator loading
       errorMessage: '', // State untuk menyimpan pesan error
-    }),
-    methods: {
-      submitForm() {
-        const formData = {
-          email: this.email,
-          password: this.password,
-        };
+    };
+  },
+  methods: {
+    async submitForm() {
+      const formData = {
+        email: this.email,
+        password: this.password,
+      };
 
-        this.isLoading = true; // Set isLoading ke true saat pengiriman dimulai
-        this.errorMessage = ''; // Reset pesan error sebelum pengiriman
+      this.isLoading = true; // Set isLoading ke true saat pengiriman dimulai
+      this.errorMessage = ''; // Reset pesan error sebelum pengiriman
 
-        axios.post('http://127.0.0.1:8000/api/login', formData)
-          .then(response => {
-              this.isLoading = false;
-              window.location.href = '/signup'; 
-          })
-          .catch(error => {
-            // Handle error response
-            this.isLoading = false; // Set isLoading ke false saat selesai
-            this.errorMessage = 'Email Atau password salah';
-          });
+      try {
+        const response = await api.post('/login', formData);
+        this.isLoading = false; // Set isLoading ke false saat selesai
+        window.location.href = '/home';
+         // Redirect ke halaman yang dilindungi setelah login sukses
+      } catch (error) {
+        // Handle error response
+        this.isLoading = false; // Set isLoading ke false saat selesai
+        if (error.response && error.response.data && error.response.data.message) {
+          this.errorMessage = error.response.data.message; // Menampilkan pesan error dari server
+        } else {
+          this.errorMessage = 'Email atau password salah'; // Pesan error default
+        }
       }
     }
   }
+};
 </script>

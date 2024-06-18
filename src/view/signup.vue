@@ -51,8 +51,8 @@
   </template>
   
   <script>
-    import axios from 'axios';
     import Swal from 'sweetalert2';
+    import api from '@/api/axios.js';
   
     export default {
       data: () => ({
@@ -81,7 +81,7 @@
         isLoading: false, // State untuk indikator loading
       }),
       methods: {
-        submitForm() {
+        async submitForm() {
           // Simple validation to ensure password and confirm password match
           if (this.password !== this.password_confirmasi) {
             Swal.fire({
@@ -101,11 +101,9 @@
           };
   
           this.isLoading = true; // Set isLoading ke true saat pengiriman dimulai
-  
-          axios.post('http://127.0.0.1:8000/api/register', formData)
-            .then(response => {
-              // Handle success response
-              Swal.fire({
+          try {
+            const response = await api.post('/register', formData);
+            Swal.fire({
                 icon: 'success',
                 title: 'Success',
                 text: 'Registration successful.',
@@ -113,19 +111,17 @@
                 this.isLoading = false; // Set isLoading ke false saat selesai
                 window.location.href = '/login';
               });
-            })
-            .catch(error => {
-              // Handle error response
-              Swal.fire({
+          } catch(error){
+            Swal.fire({
                 icon: 'error',
                 title: 'Error',
                 text: 'Registration failed.',
               });
               this.isLoading = false; // Set isLoading ke false saat selesai
               console.error(error);
-            });
-        }
+          }
       }
     }
+  }
   </script>
   

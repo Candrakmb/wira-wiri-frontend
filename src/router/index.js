@@ -5,6 +5,7 @@ import Signup from '@/view/signup.vue'
 import Home from '@/view/home.vue'
 import Food from '@/view/resto.vue'
 import Order from '@/view/order.vue'
+import MenuResto from '@/view/menuResto.vue'
 
 const routes = [
   {
@@ -36,6 +37,11 @@ const routes = [
     path: '/order',
     name: 'order',
     component: Order
+  },
+  {
+    path: '/menu',
+    name: 'Menu',
+    component: MenuResto
   }
 ]
 
