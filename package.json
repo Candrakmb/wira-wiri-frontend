@@ -1,7 +1,7 @@
 {
   "name": "wira-wiri-frontend",
   "version": "0.0.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -17,10 +17,12 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "axios": "^1.7.2",
+    "leaflet": "^1.9.4",
     "sweetalert2": "^11.11.1",
     "vue": "^3.4.27",
     "vue-router": "^4.0.13",
-    "vuetify": "^3.6.8"
+    "vuetify": "^3.6.8",
+    "vuex": "^4.1.0"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.8.0",

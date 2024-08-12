@@ -2,43 +2,73 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import DimensiDevice from '@/components/DimensiDevice.vue';
 
-// Ref untuk memantau kondisi visibilitas elemen
 const isVisible = ref(false);
+const installDialog = ref(false);
+let deferredPrompt;
 
-// Fungsi untuk mendeteksi perangkat desktop
 const detectDevice = () => {
   const userAgent = navigator.userAgent;
-  // console.log(userAgent);
   return !(/android/i.test(userAgent) || /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream);
 };
 
-// Fungsi untuk memperbarui visibilitas berdasarkan lebar layar dan jenis perangkat
 const handleResize = () => {
   isVisible.value = detectDevice();
 };
 
-// Menambahkan event listener saat komponen dipasang
 onMounted(() => {
   window.addEventListener('resize', handleResize);
-  handleResize(); // Untuk memeriksa kondisi saat halaman dimuat
+  handleResize();
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installDialog.value = true;
+  });
 });
 
-// Menghapus event listener saat komponen dilepas
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
 });
+
+const installApp = () => {
+  installDialog.value = false;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then((choiceResult) => {
+    if (choiceResult.outcome === 'accepted') {
+      console.log('User accepted the A2HS prompt');
+    } else {
+      console.log('User dismissed the A2HS prompt');
+    }
+    deferredPrompt = null;
+  });
+};
+
 </script>
 
 <template>
   <main>
-    <!-- <div v-if="isVisible" class="alert_device">
-      <DimensiDevice />
-    </div> -->
+    <!-- <v-dialog v-model="installDialog" max-width="500">
+      <v-card>
+        <v-card-title class="headline">Install App</v-card-title>
+        <v-card-text>
+          Install our app for a better experience.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="installApp">Install</v-btn>
+          <v-btn text @click="installDialog = false">Cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog> -->
     <div v-if="!isVisible">
       <router-view/>
     </div>
   </main>
 </template>
 
-<style scoped>
+<style>
+  a {
+        text-decoration: none;
+        color: inherit;
+    }
 </style>

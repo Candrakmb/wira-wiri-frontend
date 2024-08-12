@@ -108,5 +108,5 @@
     window.addEventListener('resize', updateCarouselHeight);
   });
   </script>
-  
+
   

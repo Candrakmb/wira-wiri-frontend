@@ -3,7 +3,9 @@ import Header from '@/components/header.vue';
 import HomeUser from '@/components/homeUser.vue';
 import Navbar from '@/components/navbar.vue';
 import { reactive, onMounted } from 'vue';
-import api from '@/api/axios.js'; // Import instance Axios yang telah dikonfigurasi
+import api from '@/api/axios.js'; 
+// import logout from '@/components/logout.vue';
+
 
 // State untuk menyimpan data pengguna
 const userData = reactive({
@@ -15,17 +17,21 @@ const userData = reactive({
 // Fungsi untuk memanggil API dan mendapatkan data pengguna
 const getUser = async () => {
   userData.loading = true;
-  try {
-    // Menggunakan Axios untuk memanggil endpoint API yang sesuai
-    const response = await api.get('/user');
-    userData.user = response.data; // Mengisi data pengguna dari respons API
-    console.log(response.data);
-  } catch (error) {
-    userData.error = error.message; // Menangani kesalahan jika ada
-  } finally {
-    userData.loading = false; // Menghentikan indikator loading setelah selesai
-  }
+    api.get('/user').then(res => {
+      if (!res.data.success) {
+      console.log(res.data);
+      this.$store.commit('setToken', res.data.token);
+      userData.user = res.data;
+    } else {
+      console.log(res.data);
+      userData.user = res.data;
+    }
+    }).catch(err => {
+      console.log(err);
+    })
+  
 };
+   
 
 // Memanggil fungsi getUser saat komponen dimuat
 onMounted(() => {
@@ -38,6 +44,7 @@ onMounted(() => {
       <!-- Header yang sticky -->
       <div class="position-sticky">
         <Header />
+        <!-- <logout /> -->
       </div>
       
       <!-- Konten Utama -->
@@ -47,6 +54,16 @@ onMounted(() => {
          <!-- <HomeDriver /> -->
     </div>
   </template>
+
+  <script>
+    // import { mapGetters } from 'vuex';
+    export default {
+      // computed:{
+      //     ...mapGetters(['user'])
+      // }
+    }
+  </script>
+
   <style scoped>
   .position-sticky {
     position: -webkit-sticky; /* Untuk Safari */

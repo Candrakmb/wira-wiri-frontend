@@ -6,7 +6,7 @@
         mode="shift"
         grow
       >
-        <v-btn to="/home">
+        <v-btn to="/">
             <font-awesome-icon icon="fa-solid fa-house" size="2x"/>
             <span>Home</span>
         </v-btn>

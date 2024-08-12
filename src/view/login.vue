@@ -39,7 +39,7 @@
 </template>
 
 <script>
-import api from '@/api/axios.js'; // Import instance Axios yang telah dikonfigurasi
+import {mapActions } from 'vuex';
 
 export default {
   data() {
@@ -58,28 +58,20 @@ export default {
     };
   },
   methods: {
+    ...mapActions(['login']),
     async submitForm() {
-      const formData = {
-        email: this.email,
-        password: this.password,
-      };
-
+      
       this.isLoading = true; // Set isLoading ke true saat pengiriman dimulai
       this.errorMessage = ''; // Reset pesan error sebelum pengiriman
 
       try {
-        const response = await api.post('/login', formData);
-        this.isLoading = false; // Set isLoading ke false saat selesai
-        window.location.href = '/home';
-         // Redirect ke halaman yang dilindungi setelah login sukses
+        await this.login({ email: this.email, password: this.password });
+        this.isLoading = false; 
+        this.$router.push('/');
       } catch (error) {
-        // Handle error response
-        this.isLoading = false; // Set isLoading ke false saat selesai
-        if (error.response && error.response.data && error.response.data.message) {
-          this.errorMessage = error.response.data.message; // Menampilkan pesan error dari server
-        } else {
-          this.errorMessage = 'Email atau password salah'; // Pesan error default
-        }
+        console.error('Error occurred:', error); 
+        this.errorMessage = error.message;
+        this.isLoading = false; 
       }
     }
   }

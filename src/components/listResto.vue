@@ -1,38 +1,41 @@
+<script setup>
+import NoImage from '@/assets/no image.png';
+</script>
 <template>
-  <v-infinite-scroll
-    :height="infiniteScrollHeight"
-    @load="load"
-  >
+<v-infinite-scroll :height="infiniteScrollHeight" @load="load">
     <!-- Menampilkan daftar restoran -->
     <template v-for="resto in listResto" :key="resto.id">
-      <v-container class="pb-0 pt-1" no-gutter>
-        <v-row dense>
-          <v-col cols="12">
-            <v-card variant="text">
-              <div class="d-flex flex-no-wrap">
-                <v-avatar class="ma-1" rounded="0" size="120">
-                  <!-- Gambar restoran -->
-                  <v-img :src="resto.img"></v-img>
-                </v-avatar>
-                <div>
-                  <v-card-title class="text-h6 pb-0">
-                    {{ resto.user.name }}
-                  </v-card-title>
-                  <v-card-subtitle>{{ resto.distance }} km</v-card-subtitle>
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-container>
-      <v-divider class="mt-2"></v-divider>
-    </template>
+        <v-container class="pb-0 pt-1" no-gutter>
+            <v-row dense>
+                <v-col cols="12">
+                    <router-link :to="{ name: 'Menu', params: { id: resto.id } }">
+                        <v-card class="resto-card" variant="text">
+                            <div class="d-flex flex-no-wrap">
+                                <v-avatar class="ma-1" rounded="0" size="120">
+                                    <!-- Gambar restoran -->
 
+                                    <v-img v-if="resto.img != null" :src="resto.img_url"></v-img>
+                                    <v-img v-if="resto.img == null" :src="NoImage"></v-img>
+                                </v-avatar>
+                                <div>
+                                    <v-card-title class="text-h6 pb-0">
+                                        {{ resto.user.name }}
+                                    </v-card-title>
+                                    <v-card-subtitle>{{ resto.distance }} km</v-card-subtitle>
+                                </div>
+                            </div>
+                        </v-card>
+                    </router-link>
+                </v-col>
+            </v-row>
+        </v-container>
+        <v-divider class="mt-2"></v-divider>
+    </template>
     <!-- Pesan jika tidak ada item lagi -->
     <template v-slot:empty>
-      <v-alert type="warning">No more items!</v-alert>
+        <v-alert type="warning">No more items!</v-alert>
     </template>
-  </v-infinite-scroll>
+</v-infinite-scroll>
 </template>
 
 <script>
@@ -109,4 +112,29 @@ export default {
 
 <style scoped>
 /* Styling khusus untuk komponen ini bisa ditambahkan di sini */
+.resto-card {
+    transition: transform 0.2s;
+}
+
+.resto-card:hover {
+    transform: scale(1.02);
+}
+
+.v-avatar img {
+    object-fit: cover;
+}
+
+.v-card-title {
+    font-weight: bold;
+}
+
+.v-card-subtitle {
+    color: gray;
+}
+
+/* Menghilangkan gaya default dari router-link */
+a {
+    text-decoration: none;
+    color: inherit;
+}
 </style>

@@ -52,7 +52,7 @@
   
   <script>
     import Swal from 'sweetalert2';
-    import api from '@/api/axios.js';
+    import axios from 'axios';
   
     export default {
       data: () => ({
@@ -102,14 +102,14 @@
   
           this.isLoading = true; // Set isLoading ke true saat pengiriman dimulai
           try {
-            const response = await api.post('/register', formData);
+             await axios.post('http://127.0.0.1:8000/api/register', formData);
             Swal.fire({
                 icon: 'success',
                 title: 'Success',
                 text: 'Registration successful.',
               }).then(() => {
                 this.isLoading = false; // Set isLoading ke false saat selesai
-                window.location.href = '/login';
+                this.$router.push('/login');
               });
           } catch(error){
             Swal.fire({
