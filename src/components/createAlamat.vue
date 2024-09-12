@@ -205,7 +205,7 @@ export default {
           this.marker = L.marker([this.latitude, this.longitude]).addTo(this.map);
           this.marker.on('moveend', this.updateLatLng);
           this.map.on('moveend', this.updateLatLng);
-          this.map.on('move', this.updateMarkerPosition);
+          
           if (this.$route.params.type == 'create') {
             this.updateLatLng();
           }

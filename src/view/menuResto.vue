@@ -309,8 +309,10 @@
 
 <script>
 import api from '@/api/axios.js';
+import formatCurrency from '@/mixins/formatCurrency';
 
 export default {
+    mixins: [formatCurrency],
     data() {
         return {
             latitude: '',
@@ -385,14 +387,6 @@ export default {
         }
     },
     methods: {
-        formatCurrency(amount) {
-            // Ubah angka menjadi format mata uang Rupiah
-            const formatter = new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR'
-            });
-            return formatter.format(amount);
-        },
         disableGroups(option) {
             const custom_options = option.menu_detail.map((menu_detail) => menu_detail.id);
             const selected = this.selectedCustom_options.filter((menu_detailId) => {

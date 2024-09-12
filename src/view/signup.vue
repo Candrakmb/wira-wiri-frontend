@@ -102,7 +102,7 @@
   
           this.isLoading = true; // Set isLoading ke true saat pengiriman dimulai
           try {
-             await axios.post('http://127.0.0.1:8000/api/register', formData);
+             await axios.post(import.meta.env.VITE_BASE_URL + '/register', formData);
             Swal.fire({
                 icon: 'success',
                 title: 'Success',

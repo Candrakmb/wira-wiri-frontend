@@ -1,9 +1,8 @@
 import axios from 'axios';
 import store from '../store'; // Impor store di sini
-import router from '@/router';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api', // Sesuaikan dengan URL backend Anda
+  baseURL: import.meta.env.VITE_BASE_URL, // Sesuaikan dengan URL backend Anda
 });
 
 // Request interceptor untuk menambahkan token ke header Authorization
@@ -30,7 +29,7 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const response = await axios.post('http://localhost:8000/api/refresh', {}, {
+        const response = await axios.post(import.meta.env.VITE_BASE_URL + '/refresh', {}, {
           headers: { 'Authorization': `Bearer ${store.getters.token}` }
         });
         console.log(store.getters.token)

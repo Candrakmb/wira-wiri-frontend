@@ -9,6 +9,9 @@ import router from './router'
 // Components
 import App from './App.vue'
 import store from './store';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-defaulticon-compatibility';
+import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
 
 /* import the fontawesome core */
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -21,9 +24,10 @@ import { faUser } from '@fortawesome/free-solid-svg-icons'
 import { faHouse } from '@fortawesome/free-solid-svg-icons'
 import { faUtensils } from '@fortawesome/free-solid-svg-icons'
 import { faClipboard } from '@fortawesome/free-solid-svg-icons'
+import { faThList } from '@fortawesome/free-solid-svg-icons'
 
 /* add icons to the library */
-library.add(faUser, faHouse, faUtensils, faClipboard)
+library.add(faUser, faHouse, faUtensils, faClipboard, faThList)
 
 const vuetify = createVuetify({
   components,

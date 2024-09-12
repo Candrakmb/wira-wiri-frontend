@@ -1,6 +1,27 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import DimensiDevice from '@/components/DimensiDevice.vue';
+import Echo from "laravel-echo";
+import Pusher from "pusher-js";
+import store from './store';
+
+window.Pusher = Pusher;
+const token = store.getters.token;
+window.Echo = new Echo({
+    broadcaster: "reverb",
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost: import.meta.env.VITE_REVERB_HOST,
+    wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
+    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? "https") === "https",
+    enabledTransports: ["ws", "wss"],
+    auth: {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+    authEndpoint: import.meta.env.VITE_BASE_URL + "/broadcasting/auth",
+ });
 
 const isVisible = ref(false);
 const installDialog = ref(false);
@@ -42,7 +63,6 @@ const installApp = () => {
     deferredPrompt = null;
   });
 };
-
 </script>
 
 <template>

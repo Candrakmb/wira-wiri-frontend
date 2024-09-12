@@ -1,0 +1,306 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<script>
+import { ref, computed, watch } from 'vue';
+import Navbar from '@/components/navbar.vue';
+import { VDateInput } from 'vuetify/labs/VDateInput'
+
+  const desserts = [
+    {
+      name: 'Frozen Yogurt',
+      calories: 159,
+      fat: 6.0,
+      carbs: 24,
+      protein: 4.0,
+      iron: '1',
+    },
+    {
+      name: 'Jelly bean',
+      calories: 375,
+      fat: 0.0,
+      carbs: 94,
+      protein: 0.0,
+      iron: '0',
+    },
+    {
+      name: 'KitKat',
+      calories: 518,
+      fat: 26.0,
+      carbs: 65,
+      protein: 7,
+      iron: '6',
+    },
+    {
+      name: 'Eclair',
+      calories: 262,
+      fat: 16.0,
+      carbs: 23,
+      protein: 6.0,
+      iron: '7',
+    },
+    {
+      name: 'Gingerbread',
+      calories: 356,
+      fat: 16.0,
+      carbs: 49,
+      protein: 3.9,
+      iron: '16',
+    },
+    {
+      name: 'Ice cream sandwich',
+      calories: 237,
+      fat: 9.0,
+      carbs: 37,
+      protein: 4.3,
+      iron: '1',
+    },
+    {
+      name: 'Lollipop',
+      calories: 392,
+      fat: 0.2,
+      carbs: 98,
+      protein: 0,
+      iron: '2',
+    },
+    {
+      name: 'Cupcake',
+      calories: 305,
+      fat: 3.7,
+      carbs: 67,
+      protein: 4.3,
+      iron: '8',
+    },
+    {
+      name: 'Honeycomb',
+      calories: 408,
+      fat: 3.2,
+      carbs: 87,
+      protein: 6.5,
+      iron: '45',
+    },
+    {
+      name: 'Donut',
+      calories: 452,
+      fat: 25.0,
+      carbs: 51,
+      protein: 4.9,
+      iron: '22',
+    },
+  ]
+
+  const FakeAPI = {
+  async fetch({ page, itemsPerPage, sortBy, search }) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const start = (page - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        let items = desserts.slice().filter(item => {
+          if (search.name && !item.name.toLowerCase().includes(search.name.toLowerCase())) {
+            return false;
+          }
+
+          if (search.calories && !(item.calories >= Number(search.calories))) {
+            return false;
+          }
+
+          return true;
+        });
+
+        if (sortBy.length) {
+          const sortKey = sortBy[0].key;
+          const sortOrder = sortBy[0].order;
+          items = items.sort((a, b) => {
+            const aValue = a[sortKey];
+            const bValue = b[sortKey];
+            return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
+          });
+        }
+
+        const paginated = items.slice(start, end);
+
+        resolve({ items: paginated, total: items.length });
+      }, 500);
+    });
+  },
+};
+
+export default {
+  data () {
+    return {
+        rangeDate: null
+    }
+  },
+  components: {
+    Navbar,
+    VDateInput,
+  },
+  setup() {
+    const itemsPerPage = ref(5);
+    const headers = ref([
+      { title: 'Dessert (100g serving)', align: 'start', sortable: false, key: 'name' },
+      { title: 'Calories', key: 'calories', align: 'end' },
+      { title: 'Fat (g)', key: 'fat', align: 'end' },
+      { title: 'Carbs (g)', key: 'carbs', align: 'end' },
+      { title: 'Protein (g)', key: 'protein', align: 'end' },
+      { title: 'Iron (%)', key: 'iron', align: 'end' },
+    ]);
+    const serverItems = ref([]);
+    const loading = ref(true);
+    const totalItems = ref(0);
+    const name = ref('');
+    const calories = ref('');
+    const search = ref('');
+
+    const loadItems = ({ page, itemsPerPage, sortBy }) => {
+      loading.value = true;
+      FakeAPI.fetch({ page, itemsPerPage, sortBy, search: { name: name.value, calories: calories.value } }).then(({ items, total }) => {
+        serverItems.value = items;
+        totalItems.value = total;
+        loading.value = false;
+      });
+    };
+
+    watch([name, calories], () => {
+      search.value = String(Date.now());
+    });
+
+    return {
+      itemsPerPage,
+      headers,
+      serverItems,
+      loading,
+      totalItems,
+      name,
+      calories,
+      search,
+      loadItems,
+    };
+  },
+};
+</script>
+<template>
+     <v-layout>
+        <v-app-bar class="d-flex align-center justify-center">
+            <p class="mx-auto mt-3 text-h5 font-weight-bold">Home</p>
+        </v-app-bar>
+
+
+        <v-main>
+            <v-card class="mx-4 mt-2" title="">
+                <v-card-item align="center">
+                        <div class="d-flex justify-center">
+                            <v-date-input
+                            v-model="rangeDate"
+                            label="Select range"
+                            max-width="368"
+                            multiple="range"
+                            ></v-date-input>
+                        </div>
+                </v-card-item>
+            </v-card>
+            <v-card
+                class="mx-4 my-3"
+            >
+            <v-card-item title="Pendapatan">
+            <template v-slot:subtitle>
+                <v-icon
+                class="me-1 pb-1"
+                color="warning"
+                icon="mdi-information-outline"
+                size="18"
+                ></v-icon>
+                Pendapatan selama sebulan
+            </template>
+            </v-card-item>
+
+            <v-card-text class="py-0">
+            <v-row align="center" no-gutters>
+                <v-col
+                class="text-h4"
+                cols="12"
+                >
+                Rp. 5.000.000,-
+                </v-col>
+            </v-row>
+            </v-card-text>
+
+            <div class="d-flex py-3">
+            <v-list-item
+                density="compact"
+                prepend-icon="mdi-calendar-month"
+            >
+                <v-list-item-subtitle>Juni</v-list-item-subtitle>
+            </v-list-item>
+            </div>
+        </v-card>
+        <v-card
+                class="mx-4"
+            >
+            <v-card-item title="Setor">
+            <template v-slot:subtitle>
+                <v-icon
+                class="me-1 pb-1"
+                color="warning"
+                icon="mdi-information-outline"
+                size="18"
+                ></v-icon>
+                Jumlah Uang Yang harus disetor ke admin
+            </template>
+            </v-card-item>
+
+            <v-card-text class="py-0">
+            <v-row align="center" no-gutters>
+                <v-col
+                class="text-h4"
+                cols="12"
+                >
+                Rp. 5.000.000,-
+                </v-col>
+            </v-row>
+            </v-card-text>
+
+            <div class="d-flex py-3">
+            <v-list-item
+                density="compact"
+                prepend-icon="mdi-calendar-month"
+            >
+                <v-list-item-subtitle>Juni</v-list-item-subtitle>
+            </v-list-item>
+            </div>
+        </v-card>
+        <v-card class="mx-4 my-3" title="Rincian orderan">
+            <v-card-item>
+                <v-data-table-server
+                    v-model:items-per-page="itemsPerPage"
+                    :headers="headers"
+                    :items="serverItems"
+                    :items-length="totalItems"
+                    :loading="loading"
+                    :search="search"
+                    item-value="name"
+                    @update:options="loadItems"
+                >
+                    <template v-slot:tfoot>
+                    <tr>
+                        <td>
+                        <v-text-field v-model="name" class="ma-2" density="compact" placeholder="Search name..." hide-details></v-text-field>
+                        </td>
+                        <td>
+                        <v-text-field
+                            v-model="calories"
+                            class="ma-2"
+                            density="compact"
+                            placeholder="Minimum calories"
+                            type="number"
+                            hide-details
+                        ></v-text-field>
+                        </td>
+                    </tr>
+                    </template>
+                </v-data-table-server>
+            </v-card-item>
+        </v-card>
+        </v-main>
+    </v-layout>
+    <Navbar />
+</template>
+

@@ -1,0 +1,376 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<!-- eslint-disable no-undef -->
+<template>
+  <v-layout  class="rounded rounded-md">
+    <v-app-bar title="Rincian Pesananmu" elevation="0">
+      <template v-slot:prepend>
+          <v-btn icon="mdi-arrow-left"></v-btn>
+      </template>
+      
+    </v-app-bar>
+    
+    <v-main  class="mx-auto" height="100vh">
+      <div class="w-100" style="position: sticky; top: 64px; z-index: 1000">
+        <div id="map"></div>
+      </div>
+          
+
+      <v-sheet
+          v-if="!isLoading"
+          class="pb-3"
+          color="grey-lighten-3"
+          height="auto"
+      >
+        <!-- card status order -->
+        <v-card class="text-center py-3" rounded="0">
+          <v-card-title class="pb-0">{{header_proses}}</v-card-title>
+          <v-card-subtitle>{{ caption_proses }}</v-card-subtitle>
+        </v-card>
+       
+        <!-- card driver -->
+        <v-card v-if="driver != null" class="mx-4 my-4 px-4 py-2" rounded="3">
+          <v-row align="center" justify="center" dense>
+            <v-col cols="6" class="text-capitalize font-weight-bold">
+                {{driver.user.name}}
+            </v-col>
+            <v-col cols="6" class="text-end">
+              <a target="_blank" :href="'https://wa.me/' + driver.no_whatsapp">
+              <v-btn
+                class="ma-1"
+                color="blue"
+                icon="mdi-phone"
+                size="x-small"
+              ></v-btn></a>
+              <v-btn
+                class="ma-1"
+                color="blue"
+                icon="mdi-chat"
+                size="x-small"
+              ></v-btn> 
+            </v-col>
+            <v-divider class="my-1"></v-divider>
+            <v-col cols="8" >
+                <p class="font-weight-bold mb-1">{{driver.   no_plat}}</p>
+                <p class="text-caption mb-1">chat driver bila perlu</p>
+                
+            </v-col>
+            <v-col cols="4" class="text-end">
+              <v-avatar
+                color="grey"
+                rounded="1"
+                size="60"
+                >
+              <v-img src="https://cdn.vuetifyjs.com/images/profiles/marcus.jpg" cover></v-img>
+              </v-avatar>
+            </v-col>
+          </v-row>
+        </v-card>
+         <!-- card resto & tujuan -->
+         <v-card class="mx-4 my-4 px-4 py-3" rounded="3">
+          <v-timeline truncate-line="both" side="end"  density="compact">
+            <v-timeline-item
+              v-for="kedais in kedai" :key="kedais.id"
+              dot-color="blue" 
+              icon="mdi-silverware-fork-knife" 
+              fill-dot
+              >
+              <v-container class="px-0 py-0">
+                <p class="mb-0 text-capitalize font-weight-bold">{{ kedais.kedai.user.name }}</p>
+                <p class="mb-1 text-caption d-inline-block text-truncate">{{ kedais.kedai.alamat}}</p>
+              </v-container>
+            </v-timeline-item>
+            <v-timeline-item
+              class="px-0" 
+              dot-color="blue" 
+              icon="mdi-map-marker" 
+              fill-dot
+              >
+              <v-container class="px-0 py-0">
+                <p class="mb-0 text-capitalize font-weight-bold">{{ tujuan.alamat_pelanggan.tipe_alamat }}</p>
+                <p class="mb-1 text-caption d-inline-block text-truncate" style="max-width: 200px;">{{ tujuan.alamat_pelanggan.alamat }}</p>
+              </v-container>
+            </v-timeline-item>
+          </v-timeline>
+        </v-card>
+        <!-- card rincian order -->
+         <v-card class="mx-4 my-4 px-4 py-2" rounded="3">
+            <v-card-title class="px-0">Pesanan</v-card-title>
+            <v-card-text class="px-0">
+              <v-row v-for="menu in menu_order" :key="menu.id" class="mb-2" no-gutters>
+                <v-col cols="10" class="text-subtitle-1 text-capitalize">
+                  {{menu.menu}}
+                </v-col>
+                <v-col cols="2" class="text-subtitle-1 text-end">
+                  {{ menu.qty }}
+                </v-col>
+                <v-col v-if="menu.ekstra.length > 0 || menu.catatan != null" cols="12">
+                  <v-sheet class="px-3 py-1" color="grey-lighten-3" rounded="1">
+                    <div v-if="menu.ekstra.length > 0">
+                      <div v-for="ekstra in menu.ekstra" :key="ekstra.id">
+                        - {{ekstra.nama_kategori}} : {{ekstra.nama_pilihan}}
+                      </div>
+                    </div>
+                    <div v-if="menu.catatan != null"> 
+                      catatan : {{menu.catatan}}
+                    </div>
+                  </v-sheet>
+                </v-col>
+              </v-row>
+            </v-card-text>
+         </v-card>
+         <!-- card ringkasan pemayaran  -->
+         <v-card class="mx-4 my-4 px-4 py-2" rounded="3">
+            <v-card-title class="px-0">Ringkasan Pembayaran</v-card-title>
+            <v-card-text class="px-0 py-1 text-subtitle-1 font-weight-regular">
+              <v-row no-gutters>
+                <v-col cols="8">
+                  <p>Harga</p>
+                </v-col>
+                <v-col class="text-end" cols="4" >
+                  {{formatCurrency(order.subtotal)}}
+                </v-col> 
+                <v-col cols="8">
+                  <p>pengiriman dan lainnya</p>
+                </v-col>
+                <v-col class="text-end" cols="4" >
+                  {{formatCurrency(order.ongkir)}}
+                </v-col> 
+                <v-divider class="mt-1"></v-divider>
+                <v-col cols="6">
+                  <p class="font-weight-bold">Total</p>
+                </v-col>
+                <v-col class="text-end font-weight-bold" cols="6" >
+                  {{formatCurrency(order.total_pay)}}
+                </v-col>
+              </v-row>
+            </v-card-text>
+         </v-card>  
+      </v-sheet>
+    </v-main>
+  </v-layout>
+</template>
+
+<script>
+import api from '@/api/axios'
+import formatCurrency from '@/mixins/formatCurrency'
+import L from 'leaflet';
+import 'leaflet-routing-machine';
+import 'leaflet/dist/leaflet.css';
+  export default{
+  mixins: [formatCurrency],
+  data () {
+    return {
+      order: null,
+      pelanggan: null,
+      driver: null,
+      kedai: [],
+      tujuan: null,
+      isLoading: true,
+      menu_order: null,
+      header_proses: null,
+      caption_proses: null,
+      map: null,
+      marker: null,
+      marker_driver: null,
+    }
+  },
+  methods: {
+    async orderData(){
+        this.isLoading = true;
+        try {
+            const response = await api.get('order/' + this.$route.params.id);
+            this.order = response.data.order;
+            this.pelanggan = response.data.pelanggan;
+            if(response.data.driver !== null){
+              this.driver = response.data.driver
+              this.listenPositionDriver(this.driver.id);
+            }
+            const data_lokasi = response.data.order_destination;
+            data_lokasi.forEach(lokasi => {
+                if(lokasi.tipe_destination == 0){
+                  this.tujuan = lokasi;
+                }else{
+                  this.kedai.push(lokasi);
+                }
+            })
+            this.menu_order = response.data.order_detail;
+            console.log(response.data);
+            this.isLoading = false;
+            this.prosesOrder(this.order.status_order);
+            this.initializeMap();
+            this.listenStatusOrder(this.order.id);
+        } catch (eror){
+            console.log(eror);
+            this.isLoading = false;
+        }
+    },
+    prosesOrder($status){
+         if($status == 0){
+            this.header_proses = "Pesananmu Sedang Diproses";
+            this.caption_proses = "masih diproses pesanan mu";
+         } else if ($status == 1){
+            this.header_proses =  "Berhasil mendapatkan driver";
+            this.caption_proses = "yey!, sudah dapat driver nih";
+         } else if ($status == 2) {
+            this.header_proses =  "Driver menuju resto nih";
+            this.caption_proses = "driver menuju resto buat memesan pesananmu";
+         } else if ($status == 3) {
+            this.header_proses = "Driver menuju resto nih";
+            this.caption_proses = "driver menuju ke resto pertama";
+         } else if ($status == 4) {
+            this.header_proses = "Driver menuju resto nih";
+            this.caption_proses = "driver menuju ke resto kedua";
+         } else if ($status == 5) {
+          this.header_proses = "Driver Sampai diresto";
+          this.caption_proses = "driver memesan dan pesananmu sedang dimasak";
+         } else if ($status == 6) {
+            this.header_proses = "Driver mengantar pesananmu";
+            this.caption_proses = "tunggu ya, driver mengantar pesananmu sekarang";
+         } else if ($status == 7){
+            this.header_proses = "Pesanan sampai";
+            this.caption_proses = "pesanan sudah sampai, selamat menikmati makanannya";
+         }
+    },
+    initializeMap() {
+            console.log(this.driver);
+            const latitude = this.tujuan.alamat_pelanggan.latitude;
+            const longitude = this.tujuan.alamat_pelanggan.longitude;
+            this.map = L.map('map', { zoomControl: false }).setView([latitude, longitude], 15);
+            L.tileLayer('http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}', {
+                maxZoom: 19,
+                attribution: '',
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+            }).addTo(this.map);
+            this.marker = L.marker([latitude, longitude]).addTo(this.map);
+            if (this.driver) {
+              this.marker_driver = L.marker([this.driver.latitude, this.driver.longitude]).addTo(this.map);
+              const bounds = L.latLngBounds([
+                  [this.marker.getLatLng().lat, this.marker.getLatLng().lng],
+                  [this.driver.latitude, this.driver.longitude]
+              ]);
+              this.routingMap();
+              this.map.fitBounds(bounds, { animate: true });
+            }
+    },
+    listenStatusOrder(id){
+        Echo.private("orders." + id).listen("StatusOrder", (data) => {
+          this.order = data.order;
+          this.prosesOrder(data.order.status_order);
+          this.showNotification();
+          if (data.order.status_order == 1 && data.order.driver_id != null) {
+            this.driver = data.order.driver;
+          }
+      });
+    },
+    updateMarkerDriver() {
+      if (this.marker_driver) {
+        this.marker_driver.setLatLng([this.driver.latitude, this.driver.longitude]);
+        const bounds = L.latLngBounds([
+            [this.marker.getLatLng().lat, this.marker.getLatLng().lng],
+            [this.driver.latitude, this.driver.longitude]
+        ]);
+          this.routingMap();
+          this.map.fitBounds(bounds, { animate: true });
+        } else {
+            console.warn('Marker driver tidak ditemukan.');
+        }
+    },
+    listenPositionDriver(id){
+        Echo.private("driver." + id).listen("PosisiDriver", (data) => {
+          this.driver = data.driver;
+          this.updateMarkerDriver();
+        });
+    },
+    routingMap() {
+    if (!this.marker || !this.driver) {
+        console.error("Marker or driver information is missing.");
+        return;
+    }
+    // Inisialisasi kontrol routing
+          const routingControl = L.Routing.control({
+              waypoints: [
+                  L.latLng(this.marker.getLatLng().lat, this.marker.getLatLng().lng),
+                  L.latLng(this.driver.latitude, this.driver.longitude)
+              ],
+              router: new L.Routing.OSRMv1({
+                  serviceUrl: 'https://router.project-osrm.org/route/v1'
+              }),
+              createMarker: function() { return null; }, // Menyembunyikan marker
+              lineOptions: {
+                  styles: [{ color: 'blue', opacity: 1, weight: 5 }]
+              },
+              addWaypoints: false,
+              routeWhileDragging: false,
+              show: false,
+              collapsible: false,
+              formatter: new L.Routing.Formatter({
+                  units: 'metric',
+                  roundingSensitivity: 1
+              })
+          }).addTo(this.map);
+
+          // Menghapus elemen container Leaflet Routing Machine setelah di-render
+          const routingContainer = document.querySelector('.leaflet-routing-container');
+          if (routingContainer) {
+              routingContainer.style.display = 'none'; // Menyembunyikan elemen
+          }
+      },
+
+    showNotification() {
+      // Memeriksa apakah browser mendukung notifikasi
+      if (!("Notification" in window)) {
+          alert("Browser ini tidak mendukung notifikasi.");
+          return;
+      }
+
+      // Memeriksa status izin notifikasi
+      if (Notification.permission === "granted") {
+          // Jika sudah diizinkan, tampilkan notifikasi
+          new Notification(this.header_proses, {
+                      body: this.caption_proses
+          });
+      } else if (Notification.permission !== "denied") {
+          // Jika belum, minta izin dari pengguna
+          Notification.requestPermission().then(permission => {
+              if (permission === "granted") {
+                  new Notification(this.header_proses, {
+                      body: this.caption_proses
+                  });
+              }
+          });
+      }
+    },
+
+    checkNotificationPermission() {
+      if (!("Notification" in window)) {
+        console.log("Browser ini tidak mendukung notifikasi.");
+        return;
+      }
+
+      if (Notification.permission === "granted") {
+        console.log("Izin notifikasi sudah diberikan.");
+      } else if (Notification.permission === "default" ||   Notification.permission !== "denied") {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    console.log("Izin notifikasi berhasil diberikan.");
+                } else {
+                    alert('aktifkan notifikasi untuk mendapatkan update pesananmu')
+                }
+            });
+        } else {
+            alert('aktifkan notifikasi untuk mendapatkan update pesananmu')
+        }
+    },
+  },
+   mounted() {
+    this.orderData();
+    this.checkNotificationPermission();
+  },
+  }
+</script>
+
+<style scoped>
+    #map {
+        height: 400px;
+    }
+</style>

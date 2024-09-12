@@ -13,6 +13,12 @@ import CreateAlamat from '@/components/createAlamat.vue';
 import Chekout from '@/view/chekout.vue'
 import EditCustom from '@/components/editCustomeCart.vue'
 import store from '../store'; // Impor store di sini
+import Payment from '@/components/midtrans/midtransPayment.vue'
+import Transaksi from '@/view/transaksi.vue';
+import DriverHome from '@/view/driver/home.vue';
+import DriverOrderan from '@/view/driver/orderan.vue';
+import DriverProfil from '@/view/driver/profil.vue';
+import DriverTransaksi from '@/view/driver/transaksi.vue';
 
 const routes = [
   {
@@ -84,7 +90,37 @@ const routes = [
     path: '/edit/custom',
     name: 'EditCustom',
     component: EditCustom,
-  }
+  },
+  {
+    path: '/payment/:id',
+    name: 'Payment',
+    component: Payment,
+  },
+  {
+    path: '/transaksi/:id',
+    name: 'Transaksi',
+    component: Transaksi,
+  },
+  {
+    path: '/driver/home',
+    name: 'DriverHome',
+    component: DriverHome,
+  },
+  {
+    path: '/driver/orderan',
+    name: 'DriverOrderan',
+    component: DriverOrderan,
+  },
+  {
+    path: '/driver/profil',
+    name: 'DriverProfil',
+    component: DriverProfil,
+  },
+  {
+    path: '/driver/transaksi/:id',
+    name: 'DriverTransaksi',
+    component: DriverTransaksi,
+  },
 ];
 
 const router = createRouter({
@@ -93,19 +129,28 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  const publicPages = ['/starter','/login', '/signup'];
+  const publicPages = ['/starter', '/login', '/signup'];
+  const driverPath = ['/driver/home', '/driver/orderan', '/driver/profil', '/driver/transaksi/:id'];
+  const userPath = ['/', '/profil', '/food', '/order', '/menu/:id', '/alamat', '/chekout', '/edit/custom', '/payment/:id', '/transaksi/:id'];
+  
   const authRequired = !publicPages.includes(to.path);
   const loggedIn = store.getters.isAuthenticated;
-  console.log(loggedIn);
+  const role = store.getters.role;
+
+  const allowUser = userPath.some(path => to.matched.some(record => record.path === path || record.path === path.replace(/:\w+/, '')));
+  const allowDriver = driverPath.some(path => to.matched.some(record => record.path === path));
 
   if (authRequired && !loggedIn) {
     next('/starter');
-  } else if(loggedIn && !authRequired) {
+  } else if (loggedIn && role === 'user' && !allowUser) {
     next('/');
+  } else if (loggedIn && role === 'driver' && !allowDriver) {
+    next('/driver/home');
   } else {
     next();
   }
 });
+
 
 // router.beforeEach(async (to, from, next) => {
 //   console.log(store.getters.isAuthenticated);

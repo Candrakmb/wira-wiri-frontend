@@ -17,7 +17,7 @@
 
         </v-app-bar-title>
     </v-app-bar>
-    <v-main v-if="!isLoading">
+    <v-main class="pb-10" v-if="!isLoading">
         <v-card  class="mx-auto">
             <v-card-item v-if="alamats.length == 0">
                 <v-row no-gutters> 
@@ -211,38 +211,45 @@
              <div class="text-body-2 mx-4 font-weight-bold mb-1">
                 Ringkasan Pembayaran
              </div>
-             <v-card rounded="3" class="mx-4 mb-3" elevation="2">
+             <v-card rounded="3" class="mx-4 mb-10" elevation="2">
                 <v-card-item>
                     <v-row no-gutters>
                         <v-col cols="6">
                             Harga
                         </v-col>
                         <v-col class="text-end" cols="6">
-                            120.0000
+                            {{ formatCurrency(totalItem()) }}
                         </v-col>
                         <v-col  cols="6">
                             Biaya Pengiriman
                         </v-col>
                         <v-col class="text-end" cols="6">
-                            12000
+                            {{formatCurrency(totalOngkir())}}
                         </v-col>
-                        <v-col cols="6">
-                            Biaya Lainya
+                        <v-col v-if="totalOthers() != 0" cols="6">
+                                Biaya Lainya
                         </v-col>
-                        <v-col class="text-end" cols="6">
-                            12000
+                        <v-col v-if="totalOthers() != 0" class="text-end" cols="6">
+                            {{formatCurrency(totalOthers())}}
                         </v-col>
                         <v-divider class="mt-2 mb-2 border-opacity-50"></v-divider>
                         <v-col cols="6">
                             Total Pembayaran
                         </v-col>
                         <v-col class="text-end" cols="6">
-                            12000
+                            {{formatCurrency(totalAll())}}
                         </v-col>
                     </v-row>
                 </v-card-item>
              </v-card>
         </v-card>
+        <div v-if="!isCartEmpty" class="sticky-buttom p-3 bg-white elevation-2">
+                <v-row no-gutters>
+                    <v-col cols="12" class="text-center mt-2 mb-4">
+                        <v-btn @click="createOrder()" class="rounded-xl mt-1 text-capitalize" variant="flat" color="deep-purple-darken-3" block>Pesan Sekarang - {{formatCurrency(totalAll())}}</v-btn>
+                    </v-col>
+                </v-row>
+        </div>
     </v-main>
    </v-layout>
    <!-- pembayaran -->
@@ -361,7 +368,9 @@
 
 <script>
 import api from '@/api/axios'
+import formatCurrency from '@/mixins/formatCurrency'
 export default {
+  mixins: [formatCurrency],
   data() {
     return {
         dialog: false,
@@ -388,44 +397,115 @@ export default {
   },
   computed: {
     totalCustome() {
-    return (value) => {
-        let total = value.harga;
-        if (value.custom_options && value.custom_options.length > 0) {
-            value.custom_options.forEach(custom => {
-                const details = this.getMenuDetails(custom);
-                details.forEach(detail => {
-                    total += detail.harga;
+        return (value) => {
+            let total = value.harga;
+            if (value.custom_options && value.custom_options.length > 0) {
+                value.custom_options.forEach(custom => {
+                    const details = this.getMenuDetails(custom);
+                    details.forEach(detail => {
+                        total += detail.harga;
+                    });
                 });
-            });
-        }
-        total *= value.quantity;
-        return total;
-        }
+            }
+            total *= value.quantity;
+            return total;
+            }
     },
     totalCustome_2() {
-    return (value) => {
-        let total = value.harga;
-        if (value.custom_options && value.custom_options.length > 0) {
-            value.custom_options.forEach(custom => {
-                const details = this.getMenuDetails(custom);
-                details.forEach(detail => {
-                    total += detail.harga;
+        return (value) => {
+            let total = value.harga;
+            if (value.custom_options && value.custom_options.length > 0) {
+                value.custom_options.forEach(custom => {
+                    const details = this.getMenuDetails_2(custom);
+                    details.forEach(detail => {
+                        total += detail.harga;
+                    });
                 });
+            }
+            total *= value.quantity;
+            return total;
+            }
+    },
+    totalItem() {
+        return () => {
+            let total = 0;
+            // Hitung total untuk cart pertama
+            Object.values(this.cart).forEach(value => {
+                total += this.totalCustome(value);
             });
-        }
-        total *= value.quantity;
-        return total;
+            // Jika cart kedua ada, tambahkan totalnya
+            if (this.isCartTwoExist()) {
+                if(Object.keys(this.cart_2).length != 0){
+                    Object.values(this.cart_2).forEach(value => {
+                        total += this.totalCustome_2(value);
+                    });
+                }
+            }
+
+            return total;
         }
     },
+    totalOngkir(){
+        return () =>{
+            let total = 0;
+            const total_item = this.totalItem();
+            const start_ongkir = 7000;
+            if (total_item <= 10000){
+                total = start_ongkir;
+            } else {
+                let stateRangeOngkir = 0;
+                if(total_item > 90000){
+                     stateRangeOngkir = (this.roundUpToNearestTenThousand(this.totalItem()) / 10000).toString();
+                } else {
+                     stateRangeOngkir = this.roundUpToNearestTenThousand(this.totalItem()).toString().replace(/0/g, '');
+                }
+                 
+                
+                const ongkir = (stateRangeOngkir - 1) * 1000;
+                console.log(stateRangeOngkir , ongkir);
+                total = ongkir + start_ongkir;
+            }
+            return total;             
+        }
+    },
+    totalOthers() {
+        return () => {
+            let total = 0;
+            if(this.radios == 'online'){
+                total += 5000;
+            }
+            if (this.isCartTwoExist()) {
+                if(Object.keys(this.cart_2).length != 0){
+                    total += 1000;
+                }
+            }
+            return total;
+        }
+    },
+    totalAll(){
+        return () =>{
+            return this.totalOngkir() + this.totalItem() + this.totalOthers();
+        }
+    },
+    CartTwoEmpty(){
+        return () =>{
+            if(this.isCartTwoExist()){
+                if(Object.keys(this.cart_2).length == 0){
+                    //remove localStorage
+                    localStorage.removeItem('cart_2');
+                    this.idResto.pop();
+                    localStorage.setItem('resto_id', JSON.stringify(this.idResto));
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+    }
   },
   methods: {
-    formatCurrency(amount) {
-            // Ubah angka menjadi format mata uang Rupiah
-            const formatter = new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR'
-            });
-            return formatter.format(amount);
+    roundUpToNearestTenThousand(value) {
+        return Math.ceil(value / 10000) * 10000;
     },
     openDialogCatatan(catatan,key){
         this.addCatatan = catatan;
@@ -435,6 +515,94 @@ export default {
     addOthersResto(){
         localStorage.setItem('cart_2', JSON.stringify({}));
         this.$router.push('/food');
+    },
+    async createOrder(){
+        let pembayaran = "";
+        let kedai_two = false;
+        let tipe_destinasi = [];
+        let kedai_id = [];
+        let alamat_pelanggan_id = [];
+        let menu_id = [];
+        let catatan = [];
+        let qty = [];
+        let price = [];
+        let key_item = [];
+        let key_id_item = [];
+        let menu_detail_id = [];
+        if(this.radios == 'online'){
+             pembayaran = "midtrans";
+        } else {
+             pembayaran = "tunai"
+        }
+        if(this.isCartTwoExist()){
+            if(Object.keys(this.cart_2).length != 0){
+                kedai_two = true;
+            }
+        }
+        tipe_destinasi.push('tujuan');
+        alamat_pelanggan_id.push(this.detailAlamat.id);
+        kedai_id.push(null);
+        this.idResto.forEach(resto => {
+            tipe_destinasi.push('kedai');
+            kedai_id.push(resto);
+            alamat_pelanggan_id.push(null);
+        });
+        const processCart = (cart) => {
+            Object.entries(cart).forEach(([key, value]) => {
+                menu_id.push(value.id);
+                catatan.push(value.catatan);
+                qty.push(value.quantity);
+                price.push(value.harga);
+                if (value.custom_options.length !== 0) {
+                    key_item.push(key); // Menambahkan kunci dari objek 'cart'
+                    value.custom_options.forEach(option => {
+                        key_id_item.push(key); // Menggunakan kunci dari objek 'cart'
+                        menu_detail_id.push(option);
+                    });
+                } else {
+                    key_item.push(null); 
+                }
+            });
+        };
+
+        // Proses cart utama
+        processCart(this.cart);
+
+        // Cek jika ada cart tambahan dan proses jika ada
+        if (this.isCartTwoExist()) {
+            if( Object.keys(this.cart_2).length !== 0){
+                processCart(this.cart_2);
+            }
+        }
+
+        
+        const formData = {
+            kedai_two: kedai_two,
+            start_ongkir: 7000,
+            pembayaran: pembayaran,
+            tipe_destinasi: tipe_destinasi,
+            kedai_id: kedai_id,
+            alamat_pelanggan_id: alamat_pelanggan_id,
+            menu_id: menu_id,
+            catatan: catatan,
+            qty: qty,
+            price: price,
+            key: key_item,
+            key_id: key_id_item,
+            menu_detail_id: menu_detail_id,
+          };
+        console.log(formData);
+        try{
+            const response = await api.post('order/create', formData);
+            if(response.data.data_order.metode_pembayaran == 1){
+                this.$router.push('/payment/' + response.data.data_order.invoice_number);
+            } else {    
+                this.$router.push('/transaksi/' + response.data.data_order.invoice_number);
+            } 
+            console.log(response); 
+        } catch(error){
+            console.log(error);
+        }
     },
     addCartCatatan(key) {
         var cart = null;
@@ -660,3 +828,17 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+
+.sticky-buttom {
+    bottom: 0px;
+    z-index: 1004;
+    transform: translateY(0px);
+    position: fixed;
+    height: 80px;
+    left: 0px;
+    width: calc(100% + 0px);
+}
+</style>
+
