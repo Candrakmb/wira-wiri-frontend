@@ -46,6 +46,7 @@
                 color="blue"
                 icon="mdi-chat"
                 size="x-small"
+                @click="openChat()"
               ></v-btn> 
             </v-col>
             <v-divider class="my-1"></v-divider>
@@ -147,6 +148,33 @@
          </v-card>  
       </v-sheet>
     </v-main>
+    <!-- chat pop up -->
+    <v-dialog
+        v-model="dialogChat"
+        transition="dialog-bottom-transition"
+        fullscreen
+        >
+        <v-container class="bg-white position-sticky top-0" style="max-height: 60px; z-index: 1000;">
+            <v-row no-gutters>
+                <v-col cols="2">
+                        <v-icon @click="dialogChat = false" >mdi-arrow-left</v-icon>
+                </v-col>
+                    <v-col cols="10">
+                        <v-row>
+                            <v-col cols="2" class="pt-1 p-0">
+                                <v-avatar color="#00A9FF" size="40" >
+                                    <span class="text-h6">ck</span>
+                                </v-avatar>
+                            </v-col>
+                            <v-col cols="10" class="pt-3 p-0">
+                                <span class="font-weight-bold text-capitalize">{{driver.user.name}}</span>
+                            </v-col>
+                        </v-row>
+                    </v-col>
+                    </v-row>
+        </v-container>
+        <ChatPage :data="dataChat" />
+      </v-dialog>
   </v-layout>
 </template>
 
@@ -156,6 +184,7 @@ import formatCurrency from '@/mixins/formatCurrency'
 import L from 'leaflet';
 import 'leaflet-routing-machine';
 import 'leaflet/dist/leaflet.css';
+import ChatPage from '@/components/chat.vue'
   export default{
   mixins: [formatCurrency],
   data () {
@@ -172,7 +201,12 @@ import 'leaflet/dist/leaflet.css';
       map: null,
       marker: null,
       marker_driver: null,
+      dataChat: null,
+      dialogChat: false
     }
+  },
+  components: {
+    ChatPage
   },
   methods: {
     async orderData(){
@@ -230,6 +264,15 @@ import 'leaflet/dist/leaflet.css';
             this.header_proses = "Pesanan sampai";
             this.caption_proses = "pesanan sudah sampai, selamat menikmati makanannya";
          }
+    },
+    openChat(){
+        this.dialogChat = true;
+        this.dataChat = {
+                invoice_number: this.$route.params.id,
+                order_status: this.order.status_order,
+                reciver_id: this.driver.user_id,
+                sender_id: this.pelanggan.user_id,
+        }
     },
     initializeMap() {
             console.log(this.driver);

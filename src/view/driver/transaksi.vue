@@ -51,7 +51,7 @@
                                     color="blue"
                                     icon="mdi-chat"
                                     size="x-small"
-                                    @click="dialogChat = true"
+                                    @click="openChat()"
                                 ></v-btn> 
                     </v-col>
                     <v-col cols="8" class="px-2 py-3">
@@ -254,12 +254,11 @@
         transition="dialog-bottom-transition"
         fullscreen
         >
-        <v-layout>
-            <v-container class="bg-white position-sticky top-0" style="max-height: 60px; z-index: 1000;">
-                <v-row no-gutters>
-                    <v-col cols="2">
+        <v-container class="bg-white position-sticky top-0" style="max-height: 60px; z-index: 1000;">
+            <v-row no-gutters>
+                <v-col cols="2">
                         <v-icon @click="dialogChat = false" >mdi-arrow-left</v-icon>
-                    </v-col>
+                </v-col>
                     <v-col cols="10">
                         <v-row>
                             <v-col cols="2" class="pt-1 p-0">
@@ -272,10 +271,9 @@
                             </v-col>
                         </v-row>
                     </v-col>
-                </v-row>
-            </v-container>
-        </v-layout>
-
+                    </v-row>
+        </v-container>
+        <ChatPage :data="dataChat" />
         </v-dialog>
         </v-layout>
  </template>
@@ -287,6 +285,7 @@ import L from 'leaflet';
 import Openrouteservice from 'openrouteservice-js';
 import 'leaflet-routing-machine';
 import 'leaflet/dist/leaflet.css';
+import ChatPage from '@/components/chat.vue'
  export default{
   mixins: [formatCurrency],
   data () {
@@ -318,8 +317,12 @@ import 'leaflet/dist/leaflet.css';
         realtimePosisiDriver: {
             latitude: null,
             longitude: null
-        }
+        },
+        dataChat: null
     }
+  },
+  components: {
+    ChatPage
   },
   computed: {
     isDisabled() {
@@ -407,6 +410,15 @@ import 'leaflet/dist/leaflet.css';
             this.order.status_order = status;
         } catch(error){
             console.log(error);
+        }
+    },
+    openChat(){
+        this.dialogChat = true;
+        this.dataChat = {
+                invoice_number: this.$route.params.id,
+                order_status: this.order.status_order,
+                reciver_id: this.pelanggan.user_id,
+                sender_id: this.driver.user_id,
         }
     },
     changeStatus(status) {
