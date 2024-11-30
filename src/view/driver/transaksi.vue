@@ -452,6 +452,8 @@ import ChatPage from '@/components/chat.vue'
             this.header_proses = "mengantar pesanan";
          } else if (status == 7){
             this.header_proses = "Pesanan sampai";
+         } else if (status == 8){
+            this.header_proses = "Pesanan dibatalkan";
          }
     },
     openDialogMaps(){

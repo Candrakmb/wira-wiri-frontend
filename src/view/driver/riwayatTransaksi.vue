@@ -1,10 +1,8 @@
 <script>
-import Navbar from '@/components/navbar.vue';
 import RiwayatPesanan from '@/components/riwayatComponent.vue';
 
 export default {
     components: {
-        Navbar,
         RiwayatPesanan
     }
 }
@@ -13,6 +11,4 @@ export default {
 
 <template>
     <RiwayatPesanan />
-    <Navbar />
 </template>
-

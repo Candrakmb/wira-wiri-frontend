@@ -19,6 +19,12 @@ import DriverHome from '@/view/driver/home.vue';
 import DriverOrderan from '@/view/driver/orderan.vue';
 import DriverProfil from '@/view/driver/profil.vue';
 import DriverTransaksi from '@/view/driver/transaksi.vue';
+import KedaiHome from '@/view/kedai/home.vue';
+import KedaiMenu from '@/view/kedai/menu.vue';
+import KedaiProfil from '@/view/kedai/profil.vue';
+import EditProfil from '@/components/editProfilMitra/index.vue';
+import DriverRiwayatOrder from '@/view/driver/riwayatTransaksi.vue';
+import { activatedNotifikasi, activatedLocation } from '@/pushNotifikasi';
 
 const routes = [
   {
@@ -121,6 +127,31 @@ const routes = [
     name: 'DriverTransaksi',
     component: DriverTransaksi,
   },
+  {
+    path: '/driver/riwayat_order',
+    name: 'Riwayat Order',
+    component: DriverRiwayatOrder,
+  },
+  {
+    path: '/kedai/home',
+    name: 'KedaiHome',
+    component: KedaiHome,
+  },
+  {
+    path: '/kedai/menu',
+    name: 'KedaiMenu',
+    component: KedaiMenu,
+  },
+  {
+    path: '/kedai/profil',
+    name: 'KedaiProfil',
+    component: KedaiProfil,
+  },
+  {
+    path: '/edit/profil',
+    name: 'EditProfil',
+    component: EditProfil,
+  },
 ];
 
 const router = createRouter({
@@ -130,15 +161,17 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const publicPages = ['/starter', '/login', '/signup'];
-  const driverPath = ['/driver/home', '/driver/orderan', '/driver/profil', '/driver/transaksi/:id'];
+  const driverPath = ['/driver/home', '/driver/orderan', '/driver/profil', '/driver/transaksi/:id','/edit/profil', '/driver/riwayat_order'];
   const userPath = ['/', '/profil', '/food', '/order', '/menu/:id', '/alamat', '/chekout', '/edit/custom', '/payment/:id', '/transaksi/:id'];
-  
+  const kedaiPath = ['/kedai/home', '/kedai/menu', '/kedai/profil','/edit/profil'];
+  console.log('sebelum route')
   const authRequired = !publicPages.includes(to.path);
   const loggedIn = store.getters.isAuthenticated;
   const role = store.getters.role;
 
   const allowUser = userPath.some(path => to.matched.some(record => record.path === path || record.path === path.replace(/:\w+/, '')));
   const allowDriver = driverPath.some(path => to.matched.some(record => record.path === path));
+  const allowKedai = kedaiPath.some(path => to.matched.some(record => record.path === path));
 
   if (authRequired && !loggedIn) {
     next('/starter');
@@ -146,6 +179,8 @@ router.beforeEach((to, from, next) => {
     next('/');
   } else if (loggedIn && role === 'driver' && !allowDriver) {
     next('/driver/home');
+  } else if (loggedIn && role === 'kedai' && !allowKedai) {
+    next('/kedai/home');
   } else {
     next();
   }

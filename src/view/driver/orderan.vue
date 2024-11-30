@@ -2,12 +2,20 @@
 <script>
 import api from '@/api/axios'
 import Navbar from '@/components/navbar.vue'
+import formatCurrency from '@/mixins/formatCurrency'
 export default {
+  mixins: [formatCurrency],
   data() {
     return {
       statusDriver: true,
       cardHeight: '100vh',
       isLoading: true,
+      orderan: null,
+      endTime: null, // Waktu akhir pesanan
+      interval: null, // Untuk menyimpan interval
+      progress: 0, // Nilai progress bar
+      minutesRemaining: 0, // Waktu tersisa dalam menit
+      totalTime: 0 // Total waktu dari waktu mulai hingga selesai
     }
   },
   components: {
@@ -27,13 +35,15 @@ export default {
   methods: {
        async loadStatusDriver(){  
           const response = await api.get('profil/status');
-          this.isLoading=false;
-          if(response.data.status == 1){
-            this.statusDriver = true;
-          } else {
+          if(response.data.status == 0){
             this.statusDriver = false;
+          } else {
+            this.statusDriver = true;
           }
           console.log(response)
+          this.loadNotifOrderan();
+          this.dataDriver();
+          this.isLoading=false;
        },
        async updateStatusDriver(status) {
         if (navigator.geolocation) {
@@ -56,11 +66,69 @@ export default {
         } else {
           alert('Geolocation is not supported by this browser.');
         }
-      }
+      },
+      async dataDriver(){
+        const response = await api.get('user');
+        if(response.data.success){
+          this.listenOrderan(response.data.user.id);
+        }
+      },
+      async loadNotifOrderan(){
+          const response = await api.get('queue');
+          if(response.data.orderan != null){
+            this.orderan = response.data.orderan.order;
+            this.startCountdown(response.data.orderan.end_queue);
+            console.log(response.data.orderan.end_queue);
+          } else {
+            this.orderan = null;
+          }
+      },
+      listenOrderan(id){
+        // eslint-disable-next-line no-undef
+        Echo.private("notif_driver." + id).listen("NotifyDriver", (data) => {
+          this.loadNotifOrderan();
+      });
+    },
+    startCountdown(endTime) {
+      // Konversi string endTime menjadi Date object
+      this.endTime = new Date(endTime.replace(' ', 'T')).getTime();
+      
+      // Hitung total waktu dalam detik
+      this.totalTime = Math.floor((this.endTime - Date.now()) / 1000); // Total waktu dalam detik
+      this.updateProgress(); // Inisialisasi progress
 
-    // handleCheckboxChecked() {
-    //   // Tindakan ketika checkbox dicentang
-    // },
+      // Update progress bar setiap detik
+      this.interval = setInterval(() => {
+        this.updateProgress();
+      }, 1000);
+    },
+    updateProgress() {
+      const currentTime = Date.now();
+      const timeRemaining = Math.floor((this.endTime - currentTime) / 1000); // Hitung waktu tersisa dalam detik
+
+      if (timeRemaining > 0) {
+        this.secondsRemaining = timeRemaining; // Waktu tersisa dalam detik
+        this.progress = ((this.totalTime - this.secondsRemaining) / this.totalTime) * 100; // Hitung progress
+      } else {
+        this.secondsRemaining = 0;
+        this.progress = 100;
+        clearInterval(this.interval); // Hentikan interval ketika waktu habis
+        this.orderan = null;
+      }
+    },
+    async AcceptOrder(){
+       const formData = {
+          'invoice_number': this.orderan.invoice_number
+       }
+
+       const response = await api.post('order/update/driver', formData)
+       if(response.data.success){
+        this.$router.push('/driver/transaksi/'+ this.orderan.invoice_number);
+        console.log(response);
+       } else {
+        console.log(response);
+       } 
+    },
   },
   mounted(){
     if(this.statusDriver){
@@ -89,7 +157,7 @@ export default {
           </label>
         </v-container>
       </v-card>
-      <!-- <div v-if="statusDriver" class="d-flex justify-center mt-15">
+      <div v-if="statusDriver && orderan == null" class="d-flex justify-center mt-15">
         <v-empty-state
           image="https://vuetifyjs.b-cdn.net/docs/images/components/v-empty-state/astro-dog.svg"
           size="200"
@@ -104,16 +172,20 @@ export default {
           </template>
 
           <template v-slot:text>
-            <div class="text-body-1">Cek secara berkala, usahan tetep menyala</div>
+            <div class="text-body-1">Cek secara berkala, usahakan tetep menyala</div>
           </template>
         </v-empty-state>
-      </div> -->
-      <v-card title="Orderan F-9897981731" class="rounded-3 mx-2 my-4 elevation-3">
-        <v-progress-linear color="#00A9FF" model-value="10"></v-progress-linear>
+      </div>
+      <v-card v-if="statusDriver && orderan != null"  class="rounded-3 mx-2 my-4 elevation-3">
+        <v-progress-linear color="#00A9FF" :model-value="progress"></v-progress-linear>
+        <v-card-title>
+            Orderan {{ orderan.invoice_number }}
+            <p class="text-caption">Siapkan uang lebih dari {{ formatCurrency(orderan.subtotal) }}</p>
+        </v-card-title>
         <v-card-item class=" mx-3 my-3 px-8 rounded-3 elevation-3">
           <v-row no-gutters>
             <v-col cols="8" class="text-capitalize text-truncate font-weight-bold pt-3" style="max-width: 300px;">
-              candra kusuma muhammad bimantara
+              {{ orderan.pelanggan.user.name }}
             </v-col>
             <v-col cols="4" class="text-center">
               <v-avatar color="#00A9FF" size="50" >
@@ -125,20 +197,20 @@ export default {
               Harga
             </v-col>
             <v-col cols="6" class="text-end">
-              rp12131
+              {{ formatCurrency(orderan.subtotal) }}
             </v-col>
             <v-col cols="6">
               ongkir dan lainnya
             </v-col>
             <v-col cols="6" class="text-end">
-              Rp1009098
+              {{ formatCurrency(orderan.ongkir) }}
             </v-col>
             <v-divider class="mt-2"></v-divider>
             <v-col cols="6" class="font-weight-bold">
               Total
             </v-col>
             <v-col cols="6" class="text-end font-weight-bold">
-              Rp1009098
+              {{ formatCurrency(orderan.total_pay) }}
             </v-col>
           </v-row>
         </v-card-item>
@@ -151,6 +223,7 @@ export default {
               size="x-large"
               variant="flat"
               block
+              @click="AcceptOrder"
             >
               Terima
             </v-btn>
@@ -162,6 +235,7 @@ export default {
               size="x-large"
               variant="flat"
               block
+              @click="orderan = null"
             >
               Tolak
             </v-btn>

@@ -88,7 +88,7 @@
                     </template>
                 </v-row>
             </v-card>
-            <v-card>
+            <v-card class="mb-15">
                 <v-card-title>Makanan
                     <v-divider class="mt-2 mb-2 border-opacity-50"></v-divider>
                 </v-card-title>

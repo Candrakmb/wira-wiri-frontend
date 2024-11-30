@@ -1,25 +1,24 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <!-- eslint-disable no-undef -->
 <template>
-  <v-layout  class="rounded rounded-md">
+  <v-layout  class="rounded rounded-md bg-grey-lighten-3">
     <v-app-bar title="Rincian Pesananmu" elevation="0">
       <template v-slot:prepend>
-          <v-btn icon="mdi-arrow-left"></v-btn>
+          <v-btn  @click="$router.push('/')" icon="mdi-arrow-left"></v-btn>
       </template>
       
     </v-app-bar>
     
-    <v-main  class="mx-auto" height="100vh">
-      <div class="w-100" style="position: sticky; top: 64px; z-index: 1000">
+    <v-main   class="mx-auto" height="100vh">
+      <div v-if="!isLoading && order.status_order == 6" class="w-100" style="position: sticky; top: 64px; z-index: 1000">
         <div id="map"></div>
       </div>
           
 
       <v-sheet
           v-if="!isLoading"
-          class="pb-3"
+          class="pb-3 buttom-0"
           color="grey-lighten-3"
-          height="auto"
       >
         <!-- card status order -->
         <v-card class="text-center py-3" rounded="0">
@@ -231,7 +230,6 @@ import ChatPage from '@/components/chat.vue'
             console.log(response.data);
             this.isLoading = false;
             this.prosesOrder(this.order.status_order);
-            this.initializeMap();
             this.listenStatusOrder(this.order.id);
         } catch (eror){
             console.log(eror);
@@ -258,11 +256,17 @@ import ChatPage from '@/components/chat.vue'
           this.header_proses = "Driver Sampai diresto";
           this.caption_proses = "driver memesan dan pesananmu sedang dimasak";
          } else if ($status == 6) {
+            this.$nextTick(() => {
+                this.initializeMap();
+            });
             this.header_proses = "Driver mengantar pesananmu";
             this.caption_proses = "tunggu ya, driver mengantar pesananmu sekarang";
          } else if ($status == 7){
             this.header_proses = "Pesanan sampai";
             this.caption_proses = "pesanan sudah sampai, selamat menikmati makanannya";
+         } else if ($status == 8){
+            this.header_proses = "Pesanan dibatalkan";
+            this.caption_proses = "yah pesanan dibatalkan, maaf";
          }
     },
     openChat(){
@@ -299,7 +303,6 @@ import ChatPage from '@/components/chat.vue'
         Echo.private("orders." + id).listen("StatusOrder", (data) => {
           this.order = data.order;
           this.prosesOrder(data.order.status_order);
-          this.showNotification();
           if (data.order.status_order == 1 && data.order.driver_id != null) {
             this.driver = data.order.driver;
           }
@@ -358,56 +361,9 @@ import ChatPage from '@/components/chat.vue'
               routingContainer.style.display = 'none'; // Menyembunyikan elemen
           }
       },
-
-    showNotification() {
-      // Memeriksa apakah browser mendukung notifikasi
-      if (!("Notification" in window)) {
-          alert("Browser ini tidak mendukung notifikasi.");
-          return;
-      }
-
-      // Memeriksa status izin notifikasi
-      if (Notification.permission === "granted") {
-          // Jika sudah diizinkan, tampilkan notifikasi
-          new Notification(this.header_proses, {
-                      body: this.caption_proses
-          });
-      } else if (Notification.permission !== "denied") {
-          // Jika belum, minta izin dari pengguna
-          Notification.requestPermission().then(permission => {
-              if (permission === "granted") {
-                  new Notification(this.header_proses, {
-                      body: this.caption_proses
-                  });
-              }
-          });
-      }
-    },
-
-    checkNotificationPermission() {
-      if (!("Notification" in window)) {
-        console.log("Browser ini tidak mendukung notifikasi.");
-        return;
-      }
-
-      if (Notification.permission === "granted") {
-        console.log("Izin notifikasi sudah diberikan.");
-      } else if (Notification.permission === "default" ||   Notification.permission !== "denied") {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") {
-                    console.log("Izin notifikasi berhasil diberikan.");
-                } else {
-                    alert('aktifkan notifikasi untuk mendapatkan update pesananmu')
-                }
-            });
-        } else {
-            alert('aktifkan notifikasi untuk mendapatkan update pesananmu')
-        }
-    },
   },
    mounted() {
     this.orderData();
-    this.checkNotificationPermission();
   },
   }
 </script>

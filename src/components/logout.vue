@@ -15,12 +15,15 @@
   <script>
   import api from '@/api/axios.js'; // Mengimpor instance Axios yang dikonfigurasi
   import { mapActions } from 'vuex';
+  import { unSubscribe } from '@/pushNotifikasi';
   
   export default {
     methods: {
       ...mapActions(['logout']),
       async handleLogout() { // Mengganti nama metode di komponen
         try {
+          await unSubscribe();
+          console.log("Unsubscribe berhasil");
           // Menambahkan flag khusus untuk request logout
           const response = await api.post('/logout', {}, { headers: { 'x-skip-refresh': 'true' } });
           

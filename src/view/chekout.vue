@@ -594,11 +594,20 @@ export default {
         console.log(formData);
         try{
             const response = await api.post('order/create', formData);
-            if(response.data.data_order.metode_pembayaran == 1){
+            if(response.data.success){
+                if(response.data.data_order.metode_pembayaran == 1){
                 this.$router.push('/payment/' + response.data.data_order.invoice_number);
-            } else {    
-                this.$router.push('/transaksi/' + response.data.data_order.invoice_number);
-            } 
+                } else {    
+                    this.$router.push('/transaksi/' + response.data.data_order.invoice_number);
+                } 
+                localStorage.removeItem('cart');
+                localStorage.removeItem('resto_id');
+                if(this.isCartTwoExist()){
+                    localStorage.removeItem('cart_2');
+                }
+            } else {
+                console.log('order sedang bermasalah')
+            }
             console.log(response); 
         } catch(error){
             console.log(error);

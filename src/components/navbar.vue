@@ -62,6 +62,29 @@
           <span>profil</span>
         </v-btn>
       </v-bottom-navigation>
+      <v-bottom-navigation
+        v-if="role == 'kedai'"
+        v-model="value"
+        :color="color"
+        mode="shift"
+        grow
+      >
+        <v-btn to="/kedai/home">
+            <font-awesome-icon icon="fa-solid fa-house" size="2x"/>
+            <span>Home</span>
+        </v-btn>
+      
+        <v-btn to="/kedai/menu">
+            <font-awesome-icon icon="fa-solid fa-th-list" size="2x"/>
+  
+          <span>menu</span>
+        </v-btn>
+
+        <v-btn to="/kedai/profil">
+            <font-awesome-icon icon="fa-solid fa-clipboard" size="2x"/>
+          <span>profil</span>
+        </v-btn>
+      </v-bottom-navigation>
     </v-layout>
   </template>
 <script>

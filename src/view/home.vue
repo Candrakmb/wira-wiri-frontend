@@ -4,6 +4,7 @@ import HomeUser from '@/components/homeUser.vue';
 import Navbar from '@/components/navbar.vue';
 import { reactive, onMounted } from 'vue';
 import api from '@/api/axios.js'; 
+import { activatedNotifikasi, activatedLocation } from '@/pushNotifikasi';
 // import logout from '@/components/logout.vue';
 
 
@@ -36,6 +37,8 @@ const getUser = async () => {
 // Memanggil fungsi getUser saat komponen dimuat
 onMounted(() => {
   getUser();
+  activatedNotifikasi();
+  activatedLocation();
 });
 </script>
 

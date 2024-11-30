@@ -58,7 +58,7 @@ export default {
     <v-main>
       <v-card class="mt-4 elevation-0">
         <v-row>
-          <v-col cols="12" class="text-center mb-5">
+          <v-col cols="12" class="text-center mb-2">
             <v-fab
               class="ms-15 mt-5"
               icon="mdi-pencil"
@@ -68,8 +68,8 @@ export default {
               absolute
               offset
             ></v-fab>
-            <v-avatar  size="100">
-              <v-img :src="dataUser.driver[0].img_url" cover></v-img>
+            <v-avatar color="#00A9FF" size="100">
+              <v-img :src="dataUser.kedai[0].img_url" cover></v-img>
             </v-avatar>
           </v-col>
           <v-col cols="12">
@@ -107,35 +107,23 @@ export default {
                   cols="12"
                   style="max-width: 300px"
                 >
-                 {{ dataUser.driver[0].no_whatsapp  }}
+                 {{ dataUser.kedai[0].no_whatsapp  }}
                 </v-col>
               </v-row>
               <v-divider class="my-1"></v-divider>
             </v-container>
             <v-container class="px-11 py-1">
-              <v-card>
-                <v-card-title>Spesifikasi Kendaraan</v-card-title>
-                <v-card-text class="ps-15">
-                  <v-row no-gutters>
-                    <v-col class="" cols="6">
-                      <p class="mb-0 text-capitalize font-weight-bold">tipe</p>
-                      <p class="mb-1 text-capitalize">Montor</p>
-                    </v-col>
-                    <v-col cols="6">
-                      <p class="mb-0 text-capitalize font-weight-bold">merk</p>
-                      <p class="mb-1 text-capitalize">Yamaha</p>
-                    </v-col>
-                    <v-col cols="6">
-                      <p class="mb-0 text-capitalize font-weight-bold">plat nomor</p>
-                      <p class="mb-1 text-capitalize">{{dataUser.driver[0].no_plat}}</p>
-                    </v-col>
-                    <v-col cols="6">
-                      <p class="mb-0 text-capitalize font-weight-bold">Warna</p>
-                      <p class="mb-1 text-capitalize">hitam</p>
-                    </v-col>
-                  </v-row>
-                </v-card-text>
-              </v-card>
+              <v-row no-gutters>
+                <v-col cols="12"> Alamat </v-col>
+                <v-col
+                  class="text-h6 font-weight-bold d-inline-block text-truncate"
+                  cols="12"
+                  style="max-width: 300px"
+                >
+                {{ dataUser.kedai[0].alamat  }}
+                </v-col>
+              </v-row>
+              <v-divider class="my-1"></v-divider>
             </v-container>
           </v-col>
         </v-row>
@@ -143,16 +131,6 @@ export default {
       <v-card class="elevation-0 px-9 my-4">
         <v-card-actions>
           <v-row>
-            <v-col cols="12">
-              <v-btn
-                append-icon="mdi-chevron-right"
-                color="#00A9FF"
-                text="Histori Orderan"
-                variant="flat"
-                to="/driver/riwayat_order"
-                block
-              ></v-btn>
-            </v-col>
             <v-col cols="12">
               <v-btn
                 append-icon="mdi-chevron-right"

@@ -1,184 +1,126 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script>
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import Navbar from '@/components/navbar.vue';
 import { VDateInput } from 'vuetify/labs/VDateInput'
-
-  const desserts = [
-    {
-      name: 'Frozen Yogurt',
-      calories: 159,
-      fat: 6.0,
-      carbs: 24,
-      protein: 4.0,
-      iron: '1',
-    },
-    {
-      name: 'Jelly bean',
-      calories: 375,
-      fat: 0.0,
-      carbs: 94,
-      protein: 0.0,
-      iron: '0',
-    },
-    {
-      name: 'KitKat',
-      calories: 518,
-      fat: 26.0,
-      carbs: 65,
-      protein: 7,
-      iron: '6',
-    },
-    {
-      name: 'Eclair',
-      calories: 262,
-      fat: 16.0,
-      carbs: 23,
-      protein: 6.0,
-      iron: '7',
-    },
-    {
-      name: 'Gingerbread',
-      calories: 356,
-      fat: 16.0,
-      carbs: 49,
-      protein: 3.9,
-      iron: '16',
-    },
-    {
-      name: 'Ice cream sandwich',
-      calories: 237,
-      fat: 9.0,
-      carbs: 37,
-      protein: 4.3,
-      iron: '1',
-    },
-    {
-      name: 'Lollipop',
-      calories: 392,
-      fat: 0.2,
-      carbs: 98,
-      protein: 0,
-      iron: '2',
-    },
-    {
-      name: 'Cupcake',
-      calories: 305,
-      fat: 3.7,
-      carbs: 67,
-      protein: 4.3,
-      iron: '8',
-    },
-    {
-      name: 'Honeycomb',
-      calories: 408,
-      fat: 3.2,
-      carbs: 87,
-      protein: 6.5,
-      iron: '45',
-    },
-    {
-      name: 'Donut',
-      calories: 452,
-      fat: 25.0,
-      carbs: 51,
-      protein: 4.9,
-      iron: '22',
-    },
-  ]
-
-  const FakeAPI = {
-  async fetch({ page, itemsPerPage, sortBy, search }) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const start = (page - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        let items = desserts.slice().filter(item => {
-          if (search.name && !item.name.toLowerCase().includes(search.name.toLowerCase())) {
-            return false;
-          }
-
-          if (search.calories && !(item.calories >= Number(search.calories))) {
-            return false;
-          }
-
-          return true;
-        });
-
-        if (sortBy.length) {
-          const sortKey = sortBy[0].key;
-          const sortOrder = sortBy[0].order;
-          items = items.sort((a, b) => {
-            const aValue = a[sortKey];
-            const bValue = b[sortKey];
-            return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
-          });
-        }
-
-        const paginated = items.slice(start, end);
-
-        resolve({ items: paginated, total: items.length });
-      }, 500);
-    });
-  },
-};
-
+import { activatedNotifikasi, activatedLocation } from '@/pushNotifikasi';
+import api from '@/api/axios.js';
+import formatCurrency from '@/mixins/formatCurrency';
+  
 export default {
+
+  mixins: [formatCurrency],
   data () {
     return {
-        rangeDate: null
+      search: '',
+      isLoading: true,
+      dataOrder: null,
+      startDate: null,
+      endDate: null,
+      rangeDate: null,
+        headers: [
+          {
+            align: 'start',
+            key: 'invoice_number',
+            sortable: false,
+            title: 'Invoice',
+          },
+          { key: 'nama_pelangggan', title: 'Pelanggan' },
+          { key: 'metode_pembayaran', title: 'Pembayaran' },
+          { key: 'ongkir', title: 'Ongkir' },
+          { key: 'total', title: 'Total' },
+        ],
+        dataTableOrder: [],
+        
     }
   },
   components: {
     Navbar,
     VDateInput,
   },
-  setup() {
-    const itemsPerPage = ref(5);
-    const headers = ref([
-      { title: 'Dessert (100g serving)', align: 'start', sortable: false, key: 'name' },
-      { title: 'Calories', key: 'calories', align: 'end' },
-      { title: 'Fat (g)', key: 'fat', align: 'end' },
-      { title: 'Carbs (g)', key: 'carbs', align: 'end' },
-      { title: 'Protein (g)', key: 'protein', align: 'end' },
-      { title: 'Iron (%)', key: 'iron', align: 'end' },
-    ]);
-    const serverItems = ref([]);
-    const loading = ref(true);
-    const totalItems = ref(0);
-    const name = ref('');
-    const calories = ref('');
-    const search = ref('');
+  watch: {
+    rangeDate(newValue) {
+      const start = newValue[0];
+      const end = newValue[newValue.length-1];
 
-    const loadItems = ({ page, itemsPerPage, sortBy }) => {
-      loading.value = true;
-      FakeAPI.fetch({ page, itemsPerPage, sortBy, search: { name: name.value, calories: calories.value } }).then(({ items, total }) => {
-        serverItems.value = items;
-        totalItems.value = total;
-        loading.value = false;
-      });
-    };
+        // Mengubah format tanggal ke 'D MMMM YYYY' (contoh: 25 November 2024)
+        this.startDate = start.toLocaleDateString('id-ID', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        });
 
-    watch([name, calories], () => {
-      search.value = String(Date.now());
-    });
-
-    return {
-      itemsPerPage,
-      headers,
-      serverItems,
-      loading,
-      totalItems,
-      name,
-      calories,
-      search,
-      loadItems,
-    };
+        this.endDate = end.toLocaleDateString('id-ID', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        });
+      // Panggil API setiap kali rangeDate berubah
+      this.getDataIncome(newValue[0], newValue[newValue.length-1]);
+    },
   },
+  methods: {
+    async getDataIncome(startDate,endDate){
+      console.log(startDate,endDate)
+      try{
+        const response = await api.get('/income', {
+          params: {
+            startDate: startDate,
+            endDate: endDate
+          }
+        })
+        console.log(response.data);
+        this.isLoading = false;
+        if(response.data.success){
+          this.dataOrder = response.data;
+          if(!startDate || !endDate){
+            const start = new Date(response.data.startDate);
+            const end = new Date(response.data.endDate);
+
+            // Mengubah format tanggal ke 'D MMMM YYYY' (contoh: 25 November 2024)
+            this.startDate = start.toLocaleDateString('id-ID', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            });
+
+            this.endDate = end.toLocaleDateString('id-ID', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            });
+          }
+
+            for(let order of this.dataOrder.order){
+              const pembayaran = order.metode_pembayaran == 0 ? 'Tunai' : 'Non-tunai';
+              this.dataTableOrder.push({
+                invoice_number: order.invoice_number,
+                nama_pelangggan: order.pelanggan.user.name,
+                metode_pembayaran: pembayaran,
+                ongkir: this.formatCurrency(order.ongkir),
+                total: this.formatCurrency(order.total_pay)
+              })
+            }
+          
+          console.log(response.data);
+        } else {
+          console.log(response.data);
+        }
+      } catch (error){
+        console.log(error)
+      }
+    }
+  },
+
+  mounted(){
+    this.getDataIncome();
+    activatedNotifikasi();
+    activatedLocation();
+  }
 };
 </script>
 <template>
-     <v-layout>
+     <v-layout v-if="!isLoading">
         <v-app-bar class="d-flex align-center justify-center">
             <p class="mx-auto mt-3 text-h5 font-weight-bold">Home</p>
         </v-app-bar>
@@ -218,7 +160,7 @@ export default {
                 class="text-h4"
                 cols="12"
                 >
-                Rp. 5.000.000,-
+                {{ formatCurrency(dataOrder.total_pendapatan) }}
                 </v-col>
             </v-row>
             </v-card-text>
@@ -228,7 +170,7 @@ export default {
                 density="compact"
                 prepend-icon="mdi-calendar-month"
             >
-                <v-list-item-subtitle>Juni</v-list-item-subtitle>
+                <v-list-item-subtitle>{{startDate }} - {{endDate}}</v-list-item-subtitle>
             </v-list-item>
             </div>
         </v-card>
@@ -253,7 +195,7 @@ export default {
                 class="text-h4"
                 cols="12"
                 >
-                Rp. 5.000.000,-
+                {{ formatCurrency(dataOrder.total_setor) }}
                 </v-col>
             </v-row>
             </v-card-text>
@@ -263,42 +205,32 @@ export default {
                 density="compact"
                 prepend-icon="mdi-calendar-month"
             >
-                <v-list-item-subtitle>Juni</v-list-item-subtitle>
+                <v-list-item-subtitle>{{startDate }} - {{endDate}}</v-list-item-subtitle>
             </v-list-item>
             </div>
         </v-card>
-        <v-card class="mx-4 my-3" title="Rincian orderan">
-            <v-card-item>
-                <v-data-table-server
-                    v-model:items-per-page="itemsPerPage"
-                    :headers="headers"
-                    :items="serverItems"
-                    :items-length="totalItems"
-                    :loading="loading"
-                    :search="search"
-                    item-value="name"
-                    @update:options="loadItems"
-                >
-                    <template v-slot:tfoot>
-                    <tr>
-                        <td>
-                        <v-text-field v-model="name" class="ma-2" density="compact" placeholder="Search name..." hide-details></v-text-field>
-                        </td>
-                        <td>
-                        <v-text-field
-                            v-model="calories"
-                            class="ma-2"
-                            density="compact"
-                            placeholder="Minimum calories"
-                            type="number"
-                            hide-details
-                        ></v-text-field>
-                        </td>
-                    </tr>
-                    </template>
-                </v-data-table-server>
-            </v-card-item>
-        </v-card>
+        
+          <v-card
+            class="mx-4 my-3" title="Rincian orderan"
+            flat
+          >
+            <template v-slot:text>
+              <v-text-field
+                v-model="search"
+                label="Search"
+                prepend-inner-icon="mdi-magnify"
+                variant="outlined"
+                hide-details
+                single-line
+              ></v-text-field>
+            </template>
+
+            <v-data-table
+              :headers="headers"
+              :items="dataTableOrder"
+              :search="search"
+            ></v-data-table>
+          </v-card>
         </v-main>
     </v-layout>
     <Navbar />
