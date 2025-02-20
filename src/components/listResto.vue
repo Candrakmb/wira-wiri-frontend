@@ -11,7 +11,7 @@ import NoImage from '@/assets/no image.png';
                     <router-link :to="{ name: 'Menu', params: { id: resto.id } }">
                         <v-card class="resto-card" variant="text">
                             <div class="d-flex flex-no-wrap">
-                                <v-avatar class="ma-1" rounded="0" size="120">
+                                <v-avatar class="ma-1" rounded="4" size="100">
                                     <!-- Gambar restoran -->
 
                                     <v-img v-if="resto.img != null" :src="resto.img_url"></v-img>
@@ -33,7 +33,7 @@ import NoImage from '@/assets/no image.png';
     </template>
     <!-- Pesan jika tidak ada item lagi -->
     <template v-slot:empty>
-        <v-alert type="warning">No more items!</v-alert>
+        <v-alert type="warning">Tidak ada lagi resto!</v-alert>
     </template>
 </v-infinite-scroll>
 </template>

@@ -18,6 +18,30 @@
             title="update berhasil"
             ></v-alert> 
             </v-col>
+            <v-col cols="12" class="text-center mb-3">
+                        <h4>Preview</h4>
+                        <v-avatar
+                            color="grey"
+                            size="100"
+                        >
+                            <v-img :src="imageUrl" cover></v-img>
+                        </v-avatar>
+                    </v-col>
+            <v-col cols="12">
+                <v-file-input
+                    v-model="profil"
+                    :rules="imageRule"
+                    accept="image/png, image/jpeg, image/bmp"
+                    label="Profil"
+                    placeholder="Pilih gambar menu"
+                    prepend-icon="mdi-camera"
+                    density="compact"
+                    variant="outlined"
+                    @change="onFileChange"
+                    rounded
+                    show-size
+                ></v-file-input>
+            </v-col>
             <v-col
               cols="12"
               md="4"
@@ -90,6 +114,9 @@ import api from '@/api/axios.js';
 export default {
   data() {
     return {
+      imageRule: [(value) => {
+                    return !value || !value.length || value[0].size < 2000000 || 'Gambar melebihi batas maksimum 2 mb!'
+                    }],
       form : true,
       user :null,
       pelanggan:null,
@@ -98,8 +125,11 @@ export default {
       name : null,
       email: null,
       no_whatsapp: null,
+      profil: null,
       edit : false,
-      success: false
+      success: false,
+      imageUrl: '',
+
     };
   },
   methods: {
@@ -112,6 +142,7 @@ export default {
         this.name = this.user.name;
         this.email = this.user.email;
         this.no_whatsapp = this.pelanggan.no_whatsapp;
+        this.imageUrl = this.pelanggan.img_url;
         this.loading = false;
       } catch (error) {
         console.error('Error fetching restaurant list:', error);
@@ -123,18 +154,48 @@ export default {
             name: this.name,
             email: this.email,
             no_whatsapp: this.no_whatsapp,
+            profil: this.profil,
         };
         this.loading = true
         try{
-            const response = await api.post('profil/update', formData);
-            console.log(response);
-            this.loading = false;
-            this.success = true;
-            setTimeout(() => ( window.location.reload()), 2000)
+            const response = await api.post('profil/update', formData,{
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            if(response.data.success){
+              console.log(response);
+              this.loading = false;
+              this.success = true;
+              setTimeout(() => ( window.location.reload()), 2000)
+            } else {
+              console.log(response);
+              this.loading = false;
+            }
+            
         }catch (error){
             console.error('Error updating profile', error);
             this.loading = false;
         }
+    },
+    createImage(file) {
+      if (!(file instanceof Blob || file instanceof File)) {
+        console.error('Parameter is not a Blob or File');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.imageUrl = e.target.result; // Menyimpan URL gambar setelah file dibaca
+      };
+      reader.readAsDataURL(file); // Membaca file sebagai URL Data
+    },
+    onFileChange(event) {
+      const file = event.target.files[0]; // Mendapatkan file dari event input
+
+      if (!file) {
+        return; // Jika tidak ada file yang dipilih
+      }
+
+      this.createImage(file); // Mengirim file untuk diproses
     },
     required (v) {
         return !!v || 'Field is required'

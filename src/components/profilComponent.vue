@@ -12,14 +12,14 @@ import EditProfil from "@/components/editProfil.vue"
         <template v-slot:prepend>
           <v-avatar
             color="grey-darken-3"
-            image="https://avataaars.io/?avatarStyle=Transparent&topType=ShortHairShortCurly&accessoriesType=Prescription02&hairColor=Black&facialHairType=Blank&clotheType=Hoodie&clotheColor=White&eyeType=Default&eyebrowType=DefaultNatural&mouthType=Default&skinColor=Light"
+            :image="pelanggan.img_url"
           ></v-avatar>
         </template>
 
-        <v-list-item-title class="font-weight-bold text-capitals">{{ this.user.name }}</v-list-item-title>
+        <v-list-item-title class="font-weight-bold text-capitals">{{ user.name }}</v-list-item-title>
 
-        <v-list-item-subtitle>{{ this.user.email }}</v-list-item-subtitle>
-        <v-list-item-subtitle>{{ this.pelanggan.no_whatsapp}}</v-list-item-subtitle>
+        <v-list-item-subtitle>{{ user.email }}</v-list-item-subtitle>
+        <v-list-item-subtitle>{{ pelanggan.no_whatsapp}}</v-list-item-subtitle>
         <template v-slot:append>
           <div class="justify-self-end">
             <v-icon class="me-1" icon="mdi-pencil" @click="edit = true"></v-icon>

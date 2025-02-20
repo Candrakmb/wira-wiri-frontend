@@ -5,7 +5,9 @@
             <v-container class="bg-white position-sticky top-0" style="max-height: 60px; z-index: 1000;">
                 <v-row no-gutters>
                     <v-col cols="4">
-                        <v-icon>mdi-arrow-left</v-icon>
+                            <a href="/driver/orderan">
+                                <v-icon>mdi-arrow-left</v-icon>
+                            </a>  
                     </v-col>
                     <v-col cols="8">
                         <p class="font-weight-bold">Rincian Pesanan</p>
@@ -59,8 +61,12 @@
                         {{pembayaran}}
                     </v-col>
                     <v-col cols="4" class="text-end px-2">
-                        <v-avatar color="#00A9FF" class="rounded-2 " size="60" >
-                            <span class="text-h5">ck</span>
+                        <v-avatar
+                            color="grey"
+                            rounded="1"
+                            size="60"
+                            >
+                        <v-img :src="pelanggan.img_url" cover></v-img>
                         </v-avatar>
                     </v-col>
                 </v-row>
@@ -242,11 +248,11 @@
                 </v-row>
             </v-card>
             </v-card>
-             <v-container class="text-center px-6 position-sticky bottom-0 bg-white">
-            <v-btn class="rounded-4 bg-blue text-capitalize elevation-3" block @click= "changeStatus(nextStatus)">
-                {{ buttonStatus }}
-            </v-btn>
-         </v-container>  
+             <v-container v-if="order.status_order !== 7" class="text-center px-6 position-sticky bottom-0 bg-white">
+                <v-btn class="rounded-4 bg-blue text-capitalize elevation-3" block @click="changeStatus(nextStatus)">
+                    {{ buttonStatus }}
+                </v-btn>
+            </v-container>  
         </v-dialog>
         <!-- chat pop up -->
         <v-dialog
@@ -261,9 +267,11 @@
                 </v-col>
                     <v-col cols="10">
                         <v-row>
-                            <v-col cols="2" class="pt-1 p-0">
-                                <v-avatar color="#00A9FF" size="40" >
-                                    <span class="text-h6">ck</span>
+                            <v-col cols="2" class="pt-2 p-0">
+                                <v-avatar
+                                size="30"
+                                >
+                                    <v-img :src="pelanggan.img_url" cover></v-img>
                                 </v-avatar>
                             </v-col>
                             <v-col cols="10" class="pt-3 p-0">
@@ -285,7 +293,8 @@ import L from 'leaflet';
 import Openrouteservice from 'openrouteservice-js';
 import 'leaflet-routing-machine';
 import 'leaflet/dist/leaflet.css';
-import ChatPage from '@/components/chat.vue'
+import ChatPage from '@/components/chat.vue';
+import Swal from 'sweetalert2';
  export default{
   mixins: [formatCurrency],
   data () {
@@ -395,20 +404,40 @@ import ChatPage from '@/components/chat.vue'
         } else if (status === 6) {
             this.buttonStatus = 'Selesai';
             this.nextStatus = 7;
-        }
+        } else if (status === 7){
+            this.buttonStatus = 'selesai';
+            this.nextStatus = null;
+        }   
     },
     
     async updateStatusOrder(status){
+        if (status == 7) {
+        // Menampilkan konfirmasi dengan SweetAlert
+            const result = await Swal.fire({
+                title: 'selsaikan pesanan ini?',
+                text: 'Apakah Anda yakin menyelesaikan pesanan ini?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, selesaikan',
+                cancelButtonText: 'Belum',
+            });
+
+            // Cek jika pengguna memilih untuk melanjutkan atau tidak
+            if (!result.isConfirmed) {
+                return; // Jika batal, hentikan eksekusi
+            }
+        }
+
         const formData = {
             status_order: status,
             invoice_number: this.$route.params.id, 
-          };
+        };
 
         try {
             const response = await api.post('order/update/status', formData);
             console.log(response);
             this.order.status_order = status;
-        } catch(error){
+        } catch (error) {
             console.log(error);
         }
     },
@@ -473,7 +502,12 @@ import ChatPage from '@/components/chat.vue'
         }
     },
     initializeMap() {
-
+        const driverIcon = L.icon({
+                iconUrl: '/marker_delivery.png', // Ganti dengan path gambar custom
+                iconSize: [40, 40], // Ukuran ikon (width, height)
+                iconAnchor: [20, 20], // Titik anchor (tengah bawah ikon)
+                popupAnchor: [0, -40] // Posisi popup
+             });
         if (this.map) {
             this.destroyMap();  // Hapus peta sebelumnya jika ada
         }
@@ -506,10 +540,11 @@ import ChatPage from '@/components/chat.vue'
         if (status === 6) {
             if (this.marker_kedai) this.map.removeLayer(this.marker_kedai);
             this.marker = L.marker([latitude, longitude]).addTo(this.map);
-            this.displayAlamatInMap = alamat;
+            this.displayAlamatInMap = alamat; 
         }
         // Melacak posisi driver jika tersedia
         if (navigator.geolocation) {
+            
             navigator.geolocation.watchPosition(
                 this.updatePosition,
                 this.handleError,
@@ -520,7 +555,9 @@ import ChatPage from '@/components/chat.vue'
                     if (this.marker_driver) {
                         this.map.removeLayer(this.marker_driver);
                     }
-                    this.marker_driver = L.marker([this.driver.latitude, this.driver.longitude]).addTo(this.map);
+                    this.marker_driver = L.marker([this.driver.latitude, this.driver.longitude] , {
+                            icon: driverIcon
+                    }).addTo(this.map);
                     this.initializeRouting();
                 }
             }
@@ -539,6 +576,7 @@ import ChatPage from '@/components/chat.vue'
         let endCoords='';
         if(this.order.status_order == 6){
              endCoords = [this.marker.getLatLng().lng, this.marker.getLatLng().lat];
+             console.log(endCoords);
         } else {
              endCoords = [this.marker_kedai.getLatLng().lng, this.marker_kedai.getLatLng().lat];
         }
@@ -556,7 +594,9 @@ import ChatPage from '@/components/chat.vue'
             this.geojsonLayer = L.geoJSON(response, {
                 style: () => ({ color: 'blue', weight: 7 })
             }).addTo(this.map);
-            this.map.fitBounds(this.geojsonLayer.getBounds());
+            this.map.fitBounds(this.geojsonLayer.getBounds(),{
+                  animate: true,
+              });
 
             // Mendapatkan jarak dari API
             const distanceInMeters = response.features[0].properties.segments[0].distance;
@@ -568,6 +608,12 @@ import ChatPage from '@/components/chat.vue'
         });
     },
     updatePosition(position) {
+        const driverIcon = L.icon({
+                iconUrl: '/marker_delivery.png', // Ganti dengan path gambar custom
+                iconSize: [40, 40], // Ukuran ikon (width, height)
+                iconAnchor: [20, 20], // Titik anchor (tengah bawah ikon)
+                popupAnchor: [0, -40] // Posisi popup
+             });
         const { latitude, longitude } = position.coords;
         this.realtimePosisiDriver.latitude = latitude;
         this.realtimePosisiDriver.longitude = longitude;
@@ -585,7 +631,9 @@ import ChatPage from '@/components/chat.vue'
             if (this.marker_driver) {
                 this.map.removeLayer(this.marker_driver);
             }
-            this.marker_driver = L.marker([latitude, longitude]).addTo(this.map);
+            this.marker_driver = L.marker([latitude, longitude] , {
+                icon: driverIcon
+            }).addTo(this.map);
             this.initializeRouting();
         }
 

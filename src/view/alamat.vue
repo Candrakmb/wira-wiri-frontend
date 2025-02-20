@@ -26,7 +26,10 @@
         </v-row>
       </v-card>
   </div>
-  <v-row class="mx-2 mt-2">
+  <v-row v-if="alamatsNull" class="mx-2 mt-2">
+    <v-col cols="12" class="text-center">Alamat masih kosong</v-col>
+  </v-row>
+  <v-row v-if="!alamatsNull" class="mx-2 mt-2">
     <v-col v-for="alamat in alamats" :key="alamat.id" cols="12">
         <v-card
         class="mx-auto"
@@ -73,6 +76,7 @@ export default {
   data() {
     return {
       alamats: null,
+      alamatsNull : true,
       loading: true,
       editAlamat: false,
       createAlamat: false,
@@ -83,7 +87,11 @@ export default {
       try{
         const response = await api.get('profil/alamat');
         this.alamats = response.data.alamat;
-        console.log(this.alamats)
+        if(this.alamats.length == 0){
+          this.alamatsNull = true;
+        } else {
+          this.alamatsNull = false;
+        }
       } catch(error){
         console.log(error)
       }

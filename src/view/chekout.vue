@@ -27,7 +27,7 @@
                         </div>
                     </v-col>
                     <v-col class="text-end" cols="6">
-                        <v-btn size="small" rounded="5"  variant="outlined" color="deep-purple-darken-3" class="text-capitalize">Tambah Alamat</v-btn>
+                        <v-btn size="small" :to="`/alamat`" rounded="5"  variant="outlined" color="deep-purple-darken-3" class="text-capitalize">Tambah Alamat</v-btn>
                     </v-col>
                 </v-row>
             </v-card-item>
@@ -212,7 +212,10 @@
                 Ringkasan Pembayaran
              </div>
              <v-card rounded="3" class="mx-4 mb-10" elevation="2">
-                <v-card-item>
+                <v-card-item v-if="alamats.length == 0 && detailAlamat == null">
+                    <p>Tambahkan Alamat Untuk menampilkan total pembayaran</p>
+                </v-card-item>
+                <v-card-item v-if="alamats.length != 0 && detailAlamat != null">
                     <v-row no-gutters>
                         <v-col cols="6">
                             Harga
@@ -224,20 +227,20 @@
                             Biaya Pengiriman
                         </v-col>
                         <v-col class="text-end" cols="6">
-                            {{formatCurrency(totalOngkir())}}
+                            {{formatCurrency(totalOngkir() || 0)}}
                         </v-col>
                         <v-col v-if="totalOthers() != 0" cols="6">
                                 Biaya Lainya
                         </v-col>
                         <v-col v-if="totalOthers() != 0" class="text-end" cols="6">
-                            {{formatCurrency(totalOthers())}}
+                            {{formatCurrency(totalOthers() || 0)}}
                         </v-col>
                         <v-divider class="mt-2 mb-2 border-opacity-50"></v-divider>
                         <v-col cols="6">
                             Total Pembayaran
                         </v-col>
                         <v-col class="text-end" cols="6">
-                            {{formatCurrency(totalAll())}}
+                            {{formatCurrency(totalAll() || 0)}}
                         </v-col>
                     </v-row>
                 </v-card-item>
@@ -246,7 +249,7 @@
         <div v-if="!isCartEmpty" class="sticky-buttom p-3 bg-white elevation-2">
                 <v-row no-gutters>
                     <v-col cols="12" class="text-center mt-2 mb-4">
-                        <v-btn @click="createOrder()" class="rounded-xl mt-1 text-capitalize" variant="flat" color="deep-purple-darken-3" block>Pesan Sekarang - {{formatCurrency(totalAll())}}</v-btn>
+                        <v-btn @click="createOrder()" :disabled="!canOrder" class="rounded-xl mt-1 text-capitalize" variant="flat" color="deep-purple-darken-3" block>Pesan Sekarang - {{formatCurrency(totalAll())}}</v-btn>
                     </v-col>
                 </v-row>
         </div>
@@ -289,11 +292,12 @@
             icon="mdi-close"
             @click="dialogAlamat = false"
           ></v-btn>
-          <v-toolbar-title>Pilih Pembayaran</v-toolbar-title>
+          <v-toolbar-title>Pilih Alamat</v-toolbar-title>
           <v-toolbar-items>
             <v-btn
-              text="Save"
+              text="tambah baru"
               variant="text"
+              to="/alamat/create"
               @click="dialogAlamat = false"
             ></v-btn>
           </v-toolbar-items>
@@ -390,12 +394,16 @@ export default {
         detailAlamat: null,
         idResto: [],
         latitude: null,
+        startOngkir: null,
         longitude: null,
         radios: 'tunai',
         selectedKey: null,
     }
   },
   computed: {
+    canOrder() {
+        return this.alamats.length !== 0 && this.detailAlamat !== null;
+    },
     totalCustome() {
         return (value) => {
             let total = value.harga;
@@ -449,7 +457,8 @@ export default {
         return () =>{
             let total = 0;
             const total_item = this.totalItem();
-            const start_ongkir = 7000;
+            const start_ongkir =  this.startOngkir;
+            console.log('start ongkir',start_ongkir)
             if (total_item <= 10000){
                 total = start_ongkir;
             } else {
@@ -458,13 +467,15 @@ export default {
                      stateRangeOngkir = (this.roundUpToNearestTenThousand(this.totalItem()) / 10000).toString();
                 } else {
                      stateRangeOngkir = this.roundUpToNearestTenThousand(this.totalItem()).toString().replace(/0/g, '');
-                }
+            }
                  
                 
                 const ongkir = (stateRangeOngkir - 1) * 1000;
+                
                 console.log(stateRangeOngkir , ongkir);
                 total = ongkir + start_ongkir;
             }
+            console.log('total ',total);
             return total;             
         }
     },
@@ -483,8 +494,11 @@ export default {
         }
     },
     totalAll(){
-        return () =>{
-            return this.totalOngkir() + this.totalItem() + this.totalOthers();
+        
+        return  () =>{
+            // console.log('total ongkir',await this.totalOngkir());
+            // console.log('tataollll',await this.totalOngkir() + this.totalItem() + this.totalOthers())
+            return  this.totalOngkir() + this.totalItem() + this.totalOthers();
         }
     },
     CartTwoEmpty(){
@@ -515,6 +529,22 @@ export default {
     addOthersResto(){
         localStorage.setItem('cart_2', JSON.stringify({}));
         this.$router.push('/food');
+    },
+    async getStartOngkir(){
+        try {
+            const response = await api.post('order/calculate_ongkir', {
+            kedai: this.idResto[0],  // Koordinat kedai
+            destination: [this.detailAlamat.longitude, this.detailAlamat.latitude]  // Koordinat tujuan
+            });
+            console.log(response);
+            // Ambil ongkir dasar dari response API
+            const ongkir = response.data.ongkir; // Default 7000 jika tidak ada ongkir yang diterima
+            this.startOngkir = ongkir;
+            return ongkir;
+        } catch (error) {
+            console.error('Error fetching ongkir from API:', error);
+            return; // Gunakan ongkir default jika API gagal
+        }
     },
     async createOrder(){
         let pembayaran = "";
@@ -574,7 +604,6 @@ export default {
                 processCart(this.cart_2);
             }
         }
-
         
         const formData = {
             kedai_two: kedai_two,
@@ -639,8 +668,8 @@ export default {
     selectAlamat(item){
         this.selectedAlamat = item;
         console.log(this.selectedAlamat);
-        this.dialogAlamat = false; 
         this.getAlamatById();
+        this.dialogAlamat = false; 
     },
     async getSelectedAlamat(){
         const formData = {
@@ -651,6 +680,9 @@ export default {
                 const response = await api.post('profil/selected/alamat', formData);
                 if(response.data.alamat !=null ){
                     this.selectAlamat(response.data.alamat);
+                    
+                } else {
+                    this.selectAlamat = null;
                 }
             } catch (error) {
                 console.log(error);
@@ -660,6 +692,7 @@ export default {
             try {
                 const response = await api.get('profil/detail/alamat/' + this.selectedAlamat);
                 this.detailAlamat = response.data.alamat;
+                await this.getStartOngkir();
                 console.log(this.detailAlamat);
             } catch (error) {
                 console.log(error);
@@ -727,6 +760,7 @@ export default {
             return localStorage.getItem('cart_2') !== null;
     },
     async listMenu() {
+     
       const formData = {
         latitude: this.latitude,
         longitude: this.longitude,

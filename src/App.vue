@@ -25,7 +25,7 @@ window.Echo = new Echo({
 
 const isVisible = ref(false);
 const installDialog = ref(false);
-let deferredPrompt;
+let deferredPrompt = null;
 
 const detectDevice = () => {
   const userAgent = navigator.userAgent;
@@ -40,11 +40,22 @@ onMounted(() => {
   window.addEventListener('resize', handleResize);
   handleResize();
 
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installDialog.value = true;
-  });
+   // Menangani event beforeinstallprompt
+  //  window.addEventListener('beforeinstallprompt', (e) => {
+  //   e.preventDefault();
+  //   deferredPrompt = e;
+  //   // Tampilkan dialog install otomatis setelah 3 detik
+  //   setTimeout(() => {
+  //     installDialog.value = true;
+  //   }, 3000);
+  // });
+
+  // Menampilkan prompt saat user scroll ke bawah
+  // window.addEventListener('scroll', () => {
+  //   if (window.scrollY > 100 && deferredPrompt) {
+  //     installApp();
+  //   }
+  // });
 });
 
 onUnmounted(() => {

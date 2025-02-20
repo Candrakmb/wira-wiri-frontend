@@ -13,7 +13,9 @@
         :rules="passwordRules"
         label="Password"
         class="mt-2"
-        type="password"
+        :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
+        :type="visible ? 'text' : 'password'"
+        @click:append-inner="visible = !visible"
       ></v-text-field>
       <v-btn
         color="deep-purple-darken-3"
@@ -53,16 +55,17 @@ export default {
       passwordRules: [
         value => !!value || 'Password is required.',
       ],
-      isLoading: false, // State untuk indikator loading
-      errorMessage: '', // State untuk menyimpan pesan error
+      isLoading: false, 
+      errorMessage: '', 
+      visible: false,
     };
   },
   methods: {
     ...mapActions(['login']),
     async submitForm() {
       
-      this.isLoading = true; // Set isLoading ke true saat pengiriman dimulai
-      this.errorMessage = ''; // Reset pesan error sebelum pengiriman
+      this.isLoading = true; 
+      this.errorMessage = ''; 
 
       try {
         await this.login({ email: this.email, password: this.password });
@@ -70,7 +73,7 @@ export default {
         this.$router.push('/');
       } catch (error) {
         console.error('Error occurred:', error); 
-        this.errorMessage = error.message;
+        this.errorMessage = 'password atau email salah';
         this.isLoading = false; 
       }
     }

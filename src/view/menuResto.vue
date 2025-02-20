@@ -2,30 +2,19 @@
 <v-layout class="bg-grey-lighten-3">
     <v-app-bar :elevation="0">
         <template v-slot:prepend>
-            <v-btn icon @click="$router.go(-1)">
+            <v-btn icon to="/food">
                 <v-icon>mdi-arrow-left</v-icon>
             </v-btn>
         </template>
         <v-app-bar-title>
-            <template v-if="showSearch">
-                <v-text-field v-model="searchQuery" label="Search" single-line hide-details @keyup.enter="performSearch"></v-text-field>
-            </template>
-            <template v-else>
                 <div v-if="resto && resto.user" class="text-capitalize">
                     {{resto.user.name}}
                 </div>
-            </template>
         </v-app-bar-title>
-        <v-btn icon @click="toggleSearch">
-            <v-icon>mdi-magnify</v-icon>
-        </v-btn>
-        <v-btn icon @click="toggleHeart">
-            <v-icon :class="heartClass">{{ heartIcon }}</v-icon>
-        </v-btn>
     </v-app-bar>
 
     <!-- Konten utama -->
-    <v-main color="surface-variant">
+    <v-main color="surface-variant" class="mb-10">
         <div v-if="isLoading">
             <v-skeleton-loader type="card"></v-skeleton-loader>
             <v-skeleton-loader type="card"></v-skeleton-loader>
@@ -33,18 +22,8 @@
         </div>
         <template v-else>
             <v-card v-if="resto && resto.user" class="mx-auto" :elevation="0">
-                <v-card-item>
-                    <v-card-title class="text-capitalize">{{resto.user.name}}</v-card-title>
-                </v-card-item>
-
+                <v-card-title class="text-capitalize">{{resto.user.name}}</v-card-title>
                 <v-card-text>
-                    <v-row align="center" class="mx-0">
-                        <v-rating :model-value="4.5" color="amber" density="compact" size="small" half-increments readonly></v-rating>
-                        <div class="text-grey ms-4">
-                            4.5 (413)
-                        </div>
-                    </v-row>
-
                     <div class="mt-4 mb-0 text-subtitle-1">
                         <v-icon>mdi-map-marker</v-icon> {{ resto.alamat }}
                     </div>
@@ -59,14 +38,14 @@
                 </v-card-title>
 
                 <v-row class="px-3" no-gutters>
-                    <template v-for="item in menus" :key="item.id">
+                    <template v-for="item in menuRandom" :key="item.id">
                         <v-col class="px-2 mb-5" cols="6">
                             <div class="rounded-lg elevation-4">
                                 <v-img rounded="4" height="150px" cover :src="item.img_url"></v-img>
                             </div>
-                            <p class="mt-2 text-subtitle-1 font-weight-black text-capitalize mb-0">{{ item . nama }}
+                            <p class="mt-2 text-subtitle-1 font-weight-black text-truncate text-capitalize mb-0">{{ item.nama }}
                             </p>
-                            <p>{{ item . harga_formatted }}</p>
+                            <p>{{ item.harga_formatted }}</p>
 
                             <div v-if="isInCart(item.id)" class="text-center" variant="outlined">
                                 <div v-if="!item.has_custom">
@@ -88,11 +67,11 @@
                     </template>
                 </v-row>
             </v-card>
-            <v-card class="mb-15">
-                <v-card-title>Makanan
+            <v-card v-for="(menuItems, kategori) in view_menu" :key="kategori" class="mb-4">
+                <v-card-title>{{ kategori }}
                     <v-divider class="mt-2 mb-2 border-opacity-50"></v-divider>
                 </v-card-title>
-                <v-card-item v-for="menu in menus" :key="menu.id">
+                <v-card-item  v-for="menu in menuItems" :key="menu.id" >
                     <v-row>
                         <v-col cols="6">
                             <p class="mb-1 font-weight-black text-capitalize text-subtitle-1">
@@ -262,8 +241,8 @@
                                 </p>
                             </v-col>
                             <v-col cols="12" class="text-end">
-                                <v-btn class="rounded-xl mx-2 text-capitalize" max-height="30px" variant="outlined" @click="openCustomDialog(selectedItem)" color="deep-purple-darken-3">Ubah
-                                </v-btn>
+                                <!-- <v-btn class="rounded-xl mx-2 text-capitalize" max-height="30px" variant="outlined" @click="openCustomDialog(selectedItem)" color="deep-purple-darken-3">Ubah
+                                </v-btn> -->
                                 <v-btn @click="removeFromCart(listCart)" icon="mdi-minus" size="x-small" variant="outlined" color="deep-purple-darken-3">
                                 </v-btn>
                                 <span class="px-3"> {{ listCart . quantity }}</span>
@@ -327,6 +306,8 @@ export default {
             resto: null,
             idResto: [],
             menus: null,
+            view_menu : null,
+            menuRandom: null,
             showDialog: false,
             custemDialog: false,
             changeResto: false,
@@ -405,6 +386,9 @@ export default {
                 const response = await api.post('/menu/get/' + this.$route.params.id, formData);
                 this.resto = response.data.kedai;
                 this.menus = response.data.menu;
+                this.view_menu = response.data.viewMenu;
+                this.menuRandom = response.data.menu_random;
+                console.log(this.menuRandom)
                 this.isLoading = false;
             } catch (error) {
                 console.log(error);
@@ -488,13 +472,6 @@ export default {
                 this.idResto = [];
                 localStorage.setItem('resto_id', JSON.stringify(this.idResto));
             }
-        },
-        performSearch() {
-            // Tambahkan logika pencarian di sini
-            console.log('Performing search with query:', this.searchQuery);
-        },
-        toggleHeart() {
-            this.isHeartClicked = !this.isHeartClicked;
         },
         openCustomDialog(item) {
             this.selectedItem = item;

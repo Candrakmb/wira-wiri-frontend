@@ -146,7 +146,7 @@ export default {
         let text;
         if (this.$route.params.type == 'create') {
           response = await api.post('profil/create/alamat', formData);
-          text = "Alamat berhasil diubah"
+          text = "Alamat berhasil ditambah"
         } else {
           response = await api.post('profil/update/alamat', formData);
           text = "Alamat berhasil diubah"
@@ -203,7 +203,7 @@ export default {
             subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
           }).addTo(this.map);
           this.marker = L.marker([this.latitude, this.longitude]).addTo(this.map);
-          this.marker.on('moveend', this.updateLatLng);
+      
           this.map.on('moveend', this.updateLatLng);
           
           if (this.$route.params.type == 'create') {
@@ -216,14 +216,11 @@ export default {
         console.error('Geolocation is not supported by this browser.');
       }
     },
-    updateMarkerPosition() {
+    updateLatLng() {
       const center = this.map.getCenter();
       this.marker.setLatLng(center, { animate: true, duration: 1 });
-    },
-    updateLatLng() {
-      const latlng = this.marker.getLatLng();
-      this.latitude = latlng.lat;
-      this.longitude = latlng.lng;
+      this.latitude = center.lat;
+      this.longitude = center.lng;
       this.getAddress(this.latitude, this.longitude);
     },
     async getAddress(lat, lng) {

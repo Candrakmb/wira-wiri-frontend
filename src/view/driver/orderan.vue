@@ -11,11 +11,12 @@ export default {
       cardHeight: '100vh',
       isLoading: true,
       orderan: null,
-      endTime: null, // Waktu akhir pesanan
-      interval: null, // Untuk menyimpan interval
-      progress: 0, // Nilai progress bar
-      minutesRemaining: 0, // Waktu tersisa dalam menit
-      totalTime: 0 // Total waktu dari waktu mulai hingga selesai
+      endTime: null, 
+      interval: null, 
+      progress: 0, 
+      minutesRemaining: 0, 
+      totalTime: 0,
+      orderRunning: null
     }
   },
   components: {
@@ -33,6 +34,23 @@ export default {
     }
   },
   methods: {
+       async getOrderRunning(){
+          try{
+            const response = await api.get('order/view/progress');
+            if(response.data.success){
+              if(response.data.order != null){
+                this.orderRunning = response.data.order;
+              } else {
+                this.orderRunning = null;
+              }
+              console.log(this.orderRunning);
+            } else {
+              this.orderRunning = null;
+            }
+          } catch(error) {
+            console.log(error);
+          }
+       },
        async loadStatusDriver(){  
           const response = await api.get('profil/status');
           if(response.data.status == 0){
@@ -137,7 +155,8 @@ export default {
       this.cardHeight = '100vh';
     }
     this.loadStatusDriver();
-  }
+    this.getOrderRunning();
+  },
 }
 </script>
 
@@ -157,7 +176,7 @@ export default {
           </label>
         </v-container>
       </v-card>
-      <div v-if="statusDriver && orderan == null" class="d-flex justify-center mt-15">
+      <div v-if="statusDriver && orderan == null && orderRunning == null" class="d-flex justify-center mt-15">
         <v-empty-state
           image="https://vuetifyjs.b-cdn.net/docs/images/components/v-empty-state/astro-dog.svg"
           size="200"
@@ -176,6 +195,44 @@ export default {
           </template>
         </v-empty-state>
       </div>
+      <v-card :to="'/driver/transaksi/' + orderRunning.invoice_number" v-if="statusDriver && orderRunning != null"  class="rounded-3 mx-2 my-4 elevation-3">
+        <v-card-title>
+            Orderan {{ orderRunning.invoice_number }}
+            <p class="text-caption">Siapkan uang lebih dari {{ formatCurrency(orderRunning.subtotal) }}</p>
+        </v-card-title>
+        <v-card-item class=" mx-3 my-3 px-8 rounded-3 elevation-3">
+          <v-row no-gutters>
+            <v-col cols="8" class="text-capitalize text-truncate font-weight-bold pt-3" style="max-width: 300px;">
+              {{ orderRunning.pelanggan.user.name }}
+            </v-col>
+            <v-col cols="4" class="text-center">
+              <v-avatar color="#00A9FF" size="50" >
+                        <span class="text-h6">Cj</span>
+                </v-avatar>
+            </v-col>
+            <v-divider class="mt-1"></v-divider>
+            <v-col cols="6">
+              Harga
+            </v-col>
+            <v-col cols="6" class="text-end">
+              {{ formatCurrency(orderRunning.subtotal) }}
+            </v-col>
+            <v-col cols="6">
+              ongkir dan lainnya
+            </v-col>
+            <v-col cols="6" class="text-end">
+              {{ formatCurrency(orderRunning.ongkir) }}
+            </v-col>
+            <v-divider class="mt-2"></v-divider>
+            <v-col cols="6" class="font-weight-bold">
+              Total
+            </v-col>
+            <v-col cols="6" class="text-end font-weight-bold">
+              {{ formatCurrency(orderRunning.total_pay) }}
+            </v-col>
+          </v-row>
+        </v-card-item>
+      </v-card>
       <v-card v-if="statusDriver && orderan != null"  class="rounded-3 mx-2 my-4 elevation-3">
         <v-progress-linear color="#00A9FF" :model-value="progress"></v-progress-linear>
         <v-card-title>

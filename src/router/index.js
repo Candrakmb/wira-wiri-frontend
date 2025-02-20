@@ -24,7 +24,8 @@ import KedaiMenu from '@/view/kedai/menu.vue';
 import KedaiProfil from '@/view/kedai/profil.vue';
 import EditProfil from '@/components/editProfilMitra/index.vue';
 import DriverRiwayatOrder from '@/view/driver/riwayatTransaksi.vue';
-import { activatedNotifikasi, activatedLocation } from '@/pushNotifikasi';
+import SearchKedai from '@/components/searchKedai.vue';
+
 
 const routes = [
   {
@@ -47,6 +48,11 @@ const routes = [
     name: 'home',
     component: Home,
     // meta: { requiresAuth: true },
+  },
+  {
+    path: '/search/kedai',
+    name: 'Search',
+    component: SearchKedai,
   },
   {
     path: '/food',
@@ -162,7 +168,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const publicPages = ['/starter', '/login', '/signup'];
   const driverPath = ['/driver/home', '/driver/orderan', '/driver/profil', '/driver/transaksi/:id','/edit/profil', '/driver/riwayat_order'];
-  const userPath = ['/', '/profil', '/food', '/order', '/menu/:id', '/alamat', '/chekout', '/edit/custom', '/payment/:id', '/transaksi/:id'];
+  const userPath = ['/', '/profil', '/food', '/order', '/menu/:id','/alamat/:type', '/alamat', '/chekout', '/edit/custom', '/payment/:id', '/transaksi/:id','/search/kedai'];
   const kedaiPath = ['/kedai/home', '/kedai/menu', '/kedai/profil','/edit/profil'];
   console.log('sebelum route')
   const authRequired = !publicPages.includes(to.path);

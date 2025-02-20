@@ -50,7 +50,7 @@
             </v-col>
             <v-divider class="my-1"></v-divider>
             <v-col cols="8" >
-                <p class="font-weight-bold mb-1">{{driver.   no_plat}}</p>
+                <p class="font-weight-bold mb-1">{{driver.no_plat}}</p>
                 <p class="text-caption mb-1">chat driver bila perlu</p>
                 
             </v-col>
@@ -60,7 +60,7 @@
                 rounded="1"
                 size="60"
                 >
-              <v-img src="https://cdn.vuetifyjs.com/images/profiles/marcus.jpg" cover></v-img>
+              <v-img :src="driver.img_url" cover></v-img>
               </v-avatar>
             </v-col>
           </v-row>
@@ -160,9 +160,11 @@
                 </v-col>
                     <v-col cols="10">
                         <v-row>
-                            <v-col cols="2" class="pt-1 p-0">
-                                <v-avatar color="#00A9FF" size="40" >
-                                    <span class="text-h6">ck</span>
+                          <v-col cols="2" class="pt-2 p-0">
+                                <v-avatar
+                                size="30"
+                                >
+                                    <v-img :src="driver.img_url" cover></v-img>
                                 </v-avatar>
                             </v-col>
                             <v-col cols="10" class="pt-3 p-0">
@@ -290,13 +292,24 @@ import ChatPage from '@/components/chat.vue'
             }).addTo(this.map);
             this.marker = L.marker([latitude, longitude]).addTo(this.map);
             if (this.driver) {
-              this.marker_driver = L.marker([this.driver.latitude, this.driver.longitude]).addTo(this.map);
+              const driverIcon = L.icon({
+                iconUrl: '/marker_delivery.png', // Ganti dengan path gambar custom
+                iconSize: [40, 40], // Ukuran ikon (width, height)
+                iconAnchor: [20, 20], // Titik anchor (tengah bawah ikon)
+                popupAnchor: [0, -40] // Posisi popup
+             });
+              this.marker_driver = L.marker([this.driver.latitude, this.driver.longitude],{
+            icon: driverIcon
+        }).addTo(this.map);
               const bounds = L.latLngBounds([
                   [this.marker.getLatLng().lat, this.marker.getLatLng().lng],
                   [this.driver.latitude, this.driver.longitude]
               ]);
-              this.routingMap();
-              this.map.fitBounds(bounds, { animate: true });
+              // this.routingMap();
+              this.map.fitBounds(bounds, {
+                  animate: true,
+                  padding: [13, 13],
+              });
             }
     },
     listenStatusOrder(id){
@@ -315,7 +328,7 @@ import ChatPage from '@/components/chat.vue'
             [this.marker.getLatLng().lat, this.marker.getLatLng().lng],
             [this.driver.latitude, this.driver.longitude]
         ]);
-          this.routingMap();
+          // this.routingMap();
           this.map.fitBounds(bounds, { animate: true });
         } else {
             console.warn('Marker driver tidak ditemukan.');
@@ -327,40 +340,40 @@ import ChatPage from '@/components/chat.vue'
           this.updateMarkerDriver();
         });
     },
-    routingMap() {
-    if (!this.marker || !this.driver) {
-        console.error("Marker or driver information is missing.");
-        return;
-    }
-    // Inisialisasi kontrol routing
-          const routingControl = L.Routing.control({
-              waypoints: [
-                  L.latLng(this.marker.getLatLng().lat, this.marker.getLatLng().lng),
-                  L.latLng(this.driver.latitude, this.driver.longitude)
-              ],
-              router: new L.Routing.OSRMv1({
-                  serviceUrl: 'https://router.project-osrm.org/route/v1'
-              }),
-              createMarker: function() { return null; }, // Menyembunyikan marker
-              lineOptions: {
-                  styles: [{ color: 'blue', opacity: 1, weight: 5 }]
-              },
-              addWaypoints: false,
-              routeWhileDragging: false,
-              show: false,
-              collapsible: false,
-              formatter: new L.Routing.Formatter({
-                  units: 'metric',
-                  roundingSensitivity: 1
-              })
-          }).addTo(this.map);
+    // routingMap() {
+    // if (!this.marker || !this.driver) {
+    //     console.error("Marker or driver information is missing.");
+    //     return;
+    // }
+    // // Inisialisasi kontrol routing
+    //       const routingControl = L.Routing.control({
+    //           waypoints: [
+    //               L.latLng(this.marker.getLatLng().lat, this.marker.getLatLng().lng),
+    //               L.latLng(this.driver.latitude, this.driver.longitude)
+    //           ],
+    //           router: new L.Routing.OSRMv1({
+    //               serviceUrl: 'https://router.project-osrm.org/route/v1'
+    //           }),
+    //           createMarker: function() { return null; }, // Menyembunyikan marker
+    //           lineOptions: {
+    //               styles: [{ color: 'blue', opacity: 1, weight: 5 }]
+    //           },
+    //           addWaypoints: false,
+    //           routeWhileDragging: false,
+    //           show: false,
+    //           collapsible: false,
+    //           formatter: new L.Routing.Formatter({
+    //               units: 'metric',
+    //               roundingSensitivity: 1
+    //           })
+    //       }).addTo(this.map);
 
-          // Menghapus elemen container Leaflet Routing Machine setelah di-render
-          const routingContainer = document.querySelector('.leaflet-routing-container');
-          if (routingContainer) {
-              routingContainer.style.display = 'none'; // Menyembunyikan elemen
-          }
-      },
+    //       // Menghapus elemen container Leaflet Routing Machine setelah di-render
+    //       const routingContainer = document.querySelector('.leaflet-routing-container');
+    //       if (routingContainer) {
+    //           routingContainer.style.display = 'none'; // Menyembunyikan elemen
+    //       }
+    //   },
   },
    mounted() {
     this.orderData();

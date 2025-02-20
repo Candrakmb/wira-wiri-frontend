@@ -4,7 +4,7 @@
     <v-container class="text-center pt-4 pb-1">
         <v-row justify="center" dense>
             <v-col cols="10">
-                <v-autocomplete :items="items" class="mx-auto" density="comfortable" menu-icon="" placeholder="Search resto dan makanan" prepend-inner-icon="mdi-magnify" style="max-width: 350px;" theme="light" variant="solo" auto-select-first item-props rounded></v-autocomplete>
+                <v-autocomplete   @click="goToSearch" class="mx-auto" density="comfortable" menu-icon="" placeholder="Search resto dan makanan" prepend-inner-icon="mdi-magnify" style="max-width: 350px;" theme="light" variant="solo" auto-select-first item-props rounded></v-autocomplete>
             </v-col>
             <v-col cols="2" class="text-end mt-1">
                 <a href="/profil">
@@ -20,6 +20,11 @@
 
 <script>
 export default {
+    methods: {
+        goToSearch() {
+        this.$router.push("/search/kedai");
+        },
+    },
     data: () => ({
         dialog: false,
         items: [{
